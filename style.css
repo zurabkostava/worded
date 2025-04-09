@@ -1,0 +1,2396 @@
+body {
+    margin: 0;
+    padding: 10px;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f5f5f5;
+}
+
+body.dark {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+
+.dark .card-header h2{
+    color: white;
+}
+
+.dark .translation {
+    color: #dfdddd;
+}
+
+.dark .translation span{
+    color: #777676;
+}
+
+.dark .top-bar,
+.dark .card-toolbar,
+.dark .sidebar {
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #333;
+}
+.dark .sidebar {
+    background-color: #1a1a1a;
+    border-right: 1px solid #333;
+}
+
+
+
+
+
+.dark .card,
+.dark .modal {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+.dark .card.selected {
+    background-color: #333313 !important;
+    box-shadow: 0 0 0 2px #fbc02d;
+}
+
+.dark .tags span,
+.dark .tags-display .tag {
+    background-color: #333;
+    color: #bbb;
+}
+.dark .dropdown {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+}
+.dark .dropdown div:hover {
+    background-color: #3a3a3a;
+}
+
+
+.dark .input-container .material-input > input,
+.dark .input-container .material-input > textarea {
+    background-color: rgba(255,255,255,0.05);
+    color: #e0e0e0;
+}
+
+.dark .input-container .material-input > input + span,
+.dark .input-container .material-input > textarea + span,
+.dark .material-select  span{
+    color: #aaa;
+}
+
+
+.dark select,
+.dark .material-select > select {
+    background-color: #2a2a2a;
+    color: #ddd;
+}
+
+.dark .tag-list-container li, .dark .tag-list-container li input{
+    background-color: #2a2a2a;
+    color: white;
+}
+.dark .tag-list-container li input{
+    background-color: #494949;
+}
+
+.dark .import-export-group h3{
+    color: white;
+}
+
+.dark .settings-btn {
+    background-color: #2e7d32;
+    color: white;
+}
+
+.dark .settings-btn.cyan {
+    background-color: #006064;
+    color: white;
+}
+.dark .card-tag.filtered{
+    background-color: rgba(255, 0, 0, 0.35) !important;
+    border: 2px solid #ededed;
+    color: white!important;
+    opacity: 1!important;
+}
+
+.dark .player {
+    background-color: #151515;     /* მუქი ფონი */
+    border: none;
+}
+
+.dark .modal-section h3{
+    color: #b1b1b1;
+}
+
+.dark .main-translation-tag{
+    background-color: hsl(225, 7%, 76%);
+}
+.dark .extra-translation-tag{
+    background-color: hsl(205, 8%, 71%);
+    color: black;
+}
+
+.dark #tagList span{
+    filter: brightness(70%) contrast(180%) saturate(200%);
+    color: black!important;
+    opacity: 0.4;
+}
+
+.dark .tags .card-tag {
+    filter: brightness(70%) contrast(180%) saturate(180%);
+    color: black;
+    opacity: 0.4;
+}
+
+.dark .tags span {
+    filter: brightness(70%) contrast(180%) saturate(180%);
+    color: black;
+    opacity: 0.4;
+}
+
+.dark .sentence-list p {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+}
+
+.dark .highlighted-sentence {
+    background-color: #4e4020;
+    border-left-color: #ffc107;
+    color: #eee;
+}
+
+
+#toggleDarkModeBtn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #444;
+    color: #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+
+
+#toggleDarkModeBtn:hover {
+    background-color: #666;
+}
+
+body.dark #toggleDarkModeBtn {
+    background-color: #e0e0e0;
+    color: #111;
+}
+
+
+body.dark #toggleDarkModeBtn:hover {
+    background-color: #ccc;
+}
+.dark .top {
+    background-color: #1e1e1e;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.clear-tags-btn {
+    margin: 10px 20px;
+    padding: 6px 12px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.clear-tags-btn:hover {
+    background-color: #c82333;
+}
+
+.training-btn {
+    margin-left: 12px;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background-color: #6200ee; /* primary violet */
+    color: #fff;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.training-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.37);
+    z-index: 9999999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#quizTab h3, #quizTab h2, .quiz-progress, .training-tab-content {
+    color: black;
+}
+.quiz-settings {
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+.quiz-settings label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.quiz-option.correct {
+    background-color: #28a745;
+    color: white;
+}
+
+.quiz-option.correct:hover{
+    background-color: #028020;
+
+}
+.quiz-option.incorrect {
+    background-color: #dc3545;
+    color: white;
+}
+
+.quiz-option.incorrect:hover {
+    background-color: #980210;
+    color: white;
+}
+.quiz-option {
+    padding: 10px 20px;
+    margin: 5px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background: #f0f0f0;
+    transition: background 0.3s;
+}
+.quiz-option:disabled {
+    cursor: default;
+    opacity: 0.9;
+}
+
+.training-modal-content {
+    background: #e3e0e0;
+    width: 90%;
+    height: 90%;
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.training-tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    background: #f5f5f5;
+    padding: 10px;
+    align-items: center;
+}
+.card-progress {
+    margin-top: 10px;
+}
+.progress-label {
+    font-size: 12px;
+    text-align: right;
+    margin-bottom: 3px;
+    color: #777;
+}
+
+.progress-bar-container{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    position: absolute;
+    transform: translateX(-20px);
+    width: 109%;
+    bottom: -8px;
+}
+
+.progress-label{
+    transform: translate(-45px, -20px);
+}
+.sen-option.correct {
+    background-color: #4caf50 !important; /* მწვანე */
+    color: white;
+}
+
+.sen-option.incorrect {
+    background-color: #f44336 !important; /* წითელი */
+    color: white;
+}
+
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #eee;
+    border-radius: 3px;
+    overflow: hidden;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+
+
+.progress-fill {
+    height: 100%;
+    background-color: #28a745;
+    transition: width 0.3s ease;
+}
+.card.mastered{
+    background: rgb(102,187,106);
+    background: linear-gradient(180deg, rgba(102,187,106,0) 0%, rgba(102,187,106,0.19966736694677867) 100%);
+    border: 6px solid rgba(102, 187, 106, 0.47);
+}
+
+.mastered.progress-bar{
+    background-color: #2e7d32!important;
+}
+
+
+.card.mastered .word {
+    color: #234329;
+}
+
+.dark .card.mastered .word {
+    color: #85f696;
+}
+
+.dark .card.mastered .progress-label {
+    color: white;
+    font-weight: bold;
+}
+
+.card.mastered .progress-label {
+    color: #234329;
+    font-weight: bold;
+}
+.training-tab {
+    background: transparent;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    color: #444;
+}
+
+.training-tab.active {
+    border-color: #0077cc;
+    color: #0077cc;
+}
+
+.dark .training-tab.active {
+    border-color: #0077cc;
+    color: #0077cc!important;
+}
+
+.training-close {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+}
+
+.training-tab-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.top {
+    position: sticky;
+    top: 10px; /* ზუსტად იმავე პადინგზე რაც body-ს აქვს */
+    z-index: 9999; /* სხვა ელემენტებზე მაღლა რომ იყოს */
+}
+
+
+.top {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); /* სურვილისამებრ ჩრდილი */
+    background-color: white; /* ან თემა მიხედვით */
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 0 16px;
+    gap: 10px;
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+}
+
+.top-left,
+.top-center,
+.top-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.top-left {
+    flex: 1;
+    justify-content: flex-start;
+}
+
+.top-center {
+    flex: 2;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.top-right {
+    flex: 1;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.top-bar input[type="text"] {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.top-bar button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #0077cc;
+    color: white;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.top-bar button:hover {
+    background-color: #005fa3;
+}
+
+.top-bar .title {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+
+
+
+#toggleSidebarBtn {
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 3px 6px;
+    border-radius: 4px;
+    color: #0077cc;
+    transition: all ease-in-out 0.3s!important;
+}
+
+#toggleSidebarBtn:hover {
+    color: #048cef;
+}
+
+#toggleSidebarBtn:focus {
+    outline: 2px solid rgba(4, 140, 239, 0.27);
+}
+
+.dark #toggleSidebarBtn {
+    background-color: rgba(0, 119, 204, 0.45);
+}
+
+#toggleSidebarBtn i{
+    font-size: 1rem;
+}
+
+#sidebarTagList li.active {
+    background-color: #0077cc;
+    color: white;
+    font-weight: bold;
+}
+
+
+.sidebar {
+    position: fixed;
+    top: 135px;
+    left: -290px;
+    height: 80vh;
+    width: 250px;
+    background: #f1f1f1;
+    padding: 20px;
+    border-radius: 20px;
+    overflow: auto;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    transition: left 0.3s ease;
+    z-index: 999999;
+}
+
+.dark .tags-header{
+    background-color: rgba(26, 26, 26, 0.63);
+}
+
+.tags-header{
+    position: fixed;
+
+    background-color: rgba(255, 255, 255, 0.53);
+}
+
+#sidebarTagList{
+    margin-top: 100px!important;
+}
+/* ==== საერთო სტილი ყველა სქროლისთვის ==== */
+* {
+    scrollbar-width: thin;              /* Firefox */
+    scrollbar-color: rgba(100,100,100,0.3) transparent; /* Firefox */
+}
+
+/* ==== Chrome, Edge და სხვებისთვის ==== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(100, 100, 100, 0.3);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(100, 100, 100, 0.5);
+}
+
+
+
+body.dark ::-webkit-scrollbar-thumb {
+    background-color: rgba(200, 200, 200, 0.25);
+}
+
+body.dark ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(200, 200, 200, 0.4);
+}
+
+
+.sidebar.active {
+    left: 0;
+}
+
+.sidebar h3 {
+    margin-top: 0;
+}
+
+#sidebarTagList{
+    margin: 0;
+    padding: 0;
+}
+
+#sidebarTagList li {
+    cursor: pointer;
+    padding: 6px;
+    border-bottom: 1px solid #ccc;
+    list-style: none;
+
+}
+
+#sidebarTagList li:hover {
+    background-color: rgba(13, 89, 153, 0.46);
+}
+
+
+
+
+
+.card-container {
+    padding-top: 20px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    width: 100%;
+}
+
+.card {
+    position: relative;
+    width: 300px;
+    background-color: white;
+    border-radius: 16px;
+    overflow: hidden; /* აქ არის ჯადო */
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+.card-actions i {
+    color: #999;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.card-actions i:hover {
+    color: #007bff;
+}
+.mix-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.mix-btn.selected {
+    background-color: #e0e0e0;
+}
+
+.mix-btn.correct {
+    background-color: #8bc34a;
+    color: white;
+}
+
+.mix-btn.incorrect {
+    background-color: #f44336;
+    color: white;
+}
+
+.mw-letter {
+    display: inline-block;
+    width: 30px;
+    height: 40px;
+    border-bottom: 2px solid #999;
+    text-align: center;
+    margin: 0 5px;
+    font-weight: bold;
+}
+
+.mw-letter.inserted-letter {
+    font-weight: bold;
+    border-bottom: 2px dashed #333;
+    cursor: pointer;
+}
+
+.mw-char {
+    font-size: 18px;
+    padding: 10px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+}
+
+
+#sortDirectionIcon{
+    cursor: pointer;
+}
+
+.translation {
+    margin: 12px 0 ;
+    font-size: 1.1rem;
+    color: #444;
+}
+
+.translation span{
+    padding-left: 10px
+}
+
+.translation .extra {
+    color: #999;
+    font-size: 0.95rem;
+}
+
+#training-tabs {
+    display: flex;
+    gap: 20px;
+}
+
+
+
+.settings-panel h3 {
+    margin: 0;
+    font-size: 18px;
+}
+.puzzle-word {
+    padding: 6px 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #f0f0f0;
+}
+
+.type-word-test input{
+    color: black!important;
+}
+
+#globalTrainingSettings{
+    background-color: #d3d2d2;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    padding: 5px;
+    gap: 10px;
+}
+
+.count-filter input{
+    width: 40px;
+}
+
+#globalTrainingSettings label{
+    color: black;
+    margin-right: 5px;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start!important;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.tags span {
+    background-color: #e0e0e0;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+/* Modal styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+
+}
+
+.modal {
+    position: relative;
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 500px;
+    max-width: 95%;
+    max-height: 90vh;        /* ✅ მაქსიმალური სიმაღლე */
+    overflow-y: auto;        /* ✅ შიდა სქროლი */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+
+.toolbar-select {
+    padding: 6px 16px!important;
+    border: 2px solid #0077cc;
+    border-radius: 8px;
+    text-align: center;
+    background-color: white;
+    color: #0077cc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toolbar-select option {
+    text-align: left;
+    padding: 8px 12px;
+    background-color: white;
+    color: #0077cc;
+    font-size: 0.95rem;
+}
+
+
+.toolbar-select:hover {
+    background-color: #0077cc;
+    color: white;
+}
+.sorting i {
+    font-size: 1.2rem;
+    color: #0077cc;
+    margin-right: 4px;
+}
+
+.sorting i:hover {
+    color: #20a3ff;
+}
+
+.modal h2 {
+    margin-top: 0;
+}
+
+.modal label {
+    display: block;
+    margin-top: 15px;
+    font-weight: normal;
+}
+
+.modal input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.tag-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+#addTranslationBtn {
+    padding: 6px 12px;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+
+.tags-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.tags-display .tag {
+    background-color: #ddd;
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.tags-display .tag i {
+    margin-left: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+#saveCardBtn {
+    background-color: #28a745;
+    color: white;
+}
+
+#cancelBtn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.tag-input {
+    position: relative; /* ვეეთანხმოთ .dropdown-ს */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-height: 150px;
+    overflow-y: auto;
+    display: none;
+    z-index: 999;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+
+
+.dropdown div {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.dropdown div:hover {
+    background-color: #f0f0f0;
+}
+.card .select-checkbox {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+.card.selected {
+    background-color: #fff9c4 !important;
+    box-shadow: 0 0 0 2px #fbc02d;
+}
+#selectAllBtn {
+    background-color: #ffa500;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+
+
+.preview-modal {
+    top: 70px;
+    max-height: 70vh;
+    width: 750px;
+    overflow-y: auto;
+    z-index: 99;
+
+}
+
+
+.preview-modal h2 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.preview-modal p {
+    font-size: 1.1rem;
+    margin-bottom: 16px;
+}
+
+.preview-modal .tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.preview-modal .tags span {
+    background: #eee;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    resize: vertical;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+.sentence-block {
+    margin-top: 16px;
+    text-align: left;
+    font-size: 1rem;
+}
+.sentence-block p {
+    margin: 4px 0;
+}
+.modal-section {
+    margin-top: 20px;
+}
+
+.modal-section h3 {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+
+
+.sentence-list p {
+    position: relative;
+    margin: 6px 0;
+    padding: 8px 12px;
+    text-align: left;
+    background-color: #f4f4f4;
+    border-radius: 8px;
+    font-size: 0.95rem;
+}
+.sentence-list button{
+    scale: 0.7;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.sentence-list p strong {
+    color: #555;
+    margin-right: 6px;
+}
+
+.close-modal {
+    position: sticky;
+    right: 0;
+    top: 20px!important;
+    transform: translateY(-30px);
+    margin-bottom: -69px;
+    display: flex;
+    justify-self: flex-end;
+    z-index: 99999999999;
+}
+
+.close-button {
+    font-size: 1.5rem;
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: #000;
+}
+
+
+.sentence-list .prefix {
+    color: gray;
+    opacity: 0.6;
+    user-select: none;
+    margin-right: 6px;
+}
+
+/* Tag Library Modal custom styles */
+.tag-library-modal {
+    min-height: 70vh;
+    overflow-y: auto;
+    width: 500px;
+    max-width: 95%;
+}
+
+
+
+.tag-list-container {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    margin-bottom: 20px;
+}
+
+.tag-list-container li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.tag-list-container input {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    transition: all ease-in-out 100ms ;
+}
+
+.tag-list-container input:hover {
+
+    border: 1px solid #807f7f;
+    border-radius: 6px;
+}
+
+.tag-list-container button {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+}
+
+.tag-list-container button:hover {
+    background-color: white;
+}
+
+.tag-list-container button:nth-child(2) {
+    background-color: #007bff;
+    color: white;
+}
+
+.tag-list-container button:nth-child(2):hover {
+    background-color: #004895; /* ოდნავ მუქი ლურჯი */
+}
+
+.tag-list-container button:nth-child(3) {
+    background-color: #dc3545;
+    color: white;
+}
+
+.tag-list-container button:nth-child(3):hover {
+    background-color: #a31320 !important; /* ოდნავ მუქი წითელი */
+}
+
+
+.tag-add{
+    height: 53.16px!important;
+}
+
+
+.tag-library-footer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px ;
+}
+
+
+
+#addNewTagBtn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#addNewTagBtn:hover {
+    background-color: #218838;
+}
+
+.import-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #17a2b8;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.2s ease;
+}
+
+.import-btn:hover {
+    background-color: #138496;
+}
+@keyframes fadeSlideIn {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.preview-modal {
+    position: relative;
+    animation: fadeSlideIn 0.3s ease forwards;
+    opacity: 0; /* initial */
+    transform: translateY(20px) scale(0.97);
+}
+.modal-overlay {
+    transition: opacity 0.6s ease;
+    opacity: 0;
+}
+.modal-overlay[style*="display: flex"] {
+    opacity: 1;
+}
+.extra-translation {
+    color: #aaa;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-top: 6px;
+}
+
+
+#statsMastered::after {
+    content: " სიტყვა  /";
+}
+
+#statsTotal2::after {
+    content: "-დან ";
+}
+#statsAvgProgress::after{
+    content: "-%";
+}
+
+#statsContent p {
+    position: relative;
+    padding-right: 100px;
+}
+
+#statsContent p span {
+    position: absolute;
+    right: 0;
+    min-width: 60px;
+    text-align: right;
+    font-weight: bold;
+    color: #0077cc;
+}
+
+#statsTotal2{
+    right: 0;
+}
+
+#statsMastered{
+    right: 90px!important;
+    color: #2e7d32!important;
+}
+
+#previewTranslation .extra{
+    color: gray;
+    display: flex;
+    padding-top: 10px
+
+}
+
+.main-translation-tag {
+    background-color: hsl(209, 71%, 90%); /* ღია ცისფერი, პასტელური */
+    color: #333;
+    padding: 4px 10px;
+    font-weight: 500;
+    border-radius: 12px;
+    font-size: 0.9rem;
+}
+
+.extra-translation-tag {
+    background-color: hsl(210, 60%, 93%); /* კიდევ უფრო ღია ვარიანტი */
+    color: #555;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+.speak-btn {
+    background: none;
+    border: none;
+    font-size: 1rem;
+    margin-right: 8px;
+    cursor: pointer;
+    color: #0077cc;
+    transition: color 0.2s ease;
+}
+
+.speak-btn:hover {
+    color: #005fa3;
+}
+.word {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.speak-btn {
+    background-color: transparent;
+    border: 2px solid #0077cc;
+    color: #0077cc;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.speak-btn:hover {
+    background-color: #0077cc;
+    color: white;
+}
+
+.speak-btn.active {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+.word.highlighted {
+    background-color: #fff3cd;
+    border-radius: 8px;
+    padding: 4px 8px;
+    box-shadow: 0 0 0 3px #ffeeba;
+    transition: all 0.3s ease;
+}
+.preview-word-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.preview-word-text {
+
+    font-size: 2rem;
+    margin: 0;
+}
+
+
+
+.dark .training-wrapper .training-tabs{
+    background-color: #222222;
+    border-bottom: 1px solid #404040;
+}
+
+.dark .training-wrapper .training-tabs button{
+    color: white;
+}
+
+
+.dark .training-wrapper #globalTrainingSettings{
+    background-color: #272727;
+}
+
+.dark .training-wrapper #globalTrainingSettings label{
+    color: white;
+    font-weight: lighter;
+    font-size: 14px;
+}
+
+.dark .training-wrapper #globalTrainingSettings input {
+    background-color: #808080;
+    border-radius: 4px;
+}
+
+.dark .training-tab-content{
+    background-color: #2a2a2a;
+}
+
+.dark #quizTab h2,
+.dark #quizTab h3,
+.dark #quizTab p{
+    color: white;
+}
+
+
+#previewSpeakBtn {
+    background-color: transparent;
+    border: 2px solid #0077cc;
+    color: #0077cc;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#previewSpeakBtn:hover {
+    background-color: #0077cc;
+    color: white;
+}
+
+#previewSpeakBtn.active {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+.preview-modal .speak-btn {
+    margin-left: 12px;
+    font-size: 1.1rem;
+}
+
+#previewWord{
+    display: flex;
+
+}
+
+
+.nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #1575c9;
+    border: none;
+    font-size: 2rem;
+    padding: 10px 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 30;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease;
+}
+
+
+
+.card-tag{
+    cursor: pointer;
+    padding-top: 3px!important;
+}
+
+.card-tag:hover{
+    opacity: 0.8;
+}
+
+.nav-btn:hover {
+    background-color: rgba(0, 119, 204, 0.24);
+}
+
+.nav-btn:disabled {
+    background-color: #eee;
+    color: #999;
+    cursor: not-allowed;
+}
+.left-nav {
+    left: calc(50% - 450px); /* მოდალის მარცხნივ ოდნავ გარეთ */
+}
+
+.right-nav {
+    right: calc(50% - 450px); /* მოდალის მარჯვნივ ოდნავ გარეთ */
+}
+
+.center-nav {
+    left: 50%;
+    transform: translate(-50%); /* 60px ქვემოთ, ცენტრში */
+    bottom: 20px;
+    top: auto;
+    position: absolute;
+    z-index: 30;
+}
+.center-nav:hover {
+    background-color: rgba(0, 119, 204, 0.2);
+}
+
+.card-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 50px;
+    padding: 0 20px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+.toolbar-left {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.toolbar-select {
+    padding: 6px 8px;
+    font-size: 1rem;
+    border: 2px solid #0077cc;
+    border-radius: 8px;
+    background-color: white;
+    color: #0077cc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    appearance: none; /* removes default arrow in some browsers */
+}
+
+.toolbar-select:hover {
+    background-color: rgba(255, 255, 255, 0.13);
+    color: #0077cc;
+}
+
+.toolbar-select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.3);
+}
+
+
+
+.toolbar-center {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+.toolbar-actions {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: none; /* დასაწყისში დამალულია */
+    gap: 10px;
+    z-index: 99999999999;
+}
+.toolbar-actions.visible {
+    display: flex; /* გამოვაჩინოთ ეს კლასი როდესა გვაქვს მონიშვნა */
+}
+
+/* ღილაკის ვიზუალი */
+.toolbar-btn {
+    background-color: #fff;
+    border: 2px solid #0077cc;
+    color: #0077cc;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toolbar-btn:hover {
+    background-color: #0077cc;
+    color: white;
+}
+
+
+.dark .toolbar-btn{
+    background-color: #1e1e1e;
+}
+
+#deleteSelectedBtn,
+#selectAllBtn,
+#cancelSelectionBtn {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.visible-button {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.toolbar-actions button {
+    background-color: #0077cc;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: outline 0.2s ease-in-out!important;
+}
+
+
+
+
+.toolbar-actions #deleteSelectedBtn {
+    background-color: red;
+}
+
+.toolbar-actions #deleteSelectedBtn:hover {
+    background-color: #a30202;
+}
+
+.toolbar-actions #deleteSelectedBtn:focus {
+    background-color: #a30202;
+    outline: 3px solid rgba(204, 0, 0, 0.45);
+}
+
+.toolbar-actions #cancelSelectionBtn {
+    background-color: lightslategray;
+}
+
+.toolbar-actions #cancelSelectionBtn:hover {
+    background-color: #4b5761;
+}
+
+.toolbar-actions #cancelSelectionBtn:focus {
+    background-color: #4b5761;
+    outline: 3px solid rgba(188, 188, 188, 0.45);
+
+}
+
+.toolbar-actions #selectAllBtn {
+    background-color: #0056ac;
+}
+
+.toolbar-actions #selectAllBtn:hover {
+    background-color: #012d59;
+}
+
+.toolbar-actions #selectAllBtn:focus {
+    background-color: #014487;
+    outline: 3px solid rgba(1, 68, 135, 0.45);
+
+}
+
+.search-input{
+    width: 350px!important;
+    scale: 0.8;
+    margin: -8px 0;
+}
+
+
+
+.import-export-group {
+    margin-top: 15px;
+}
+
+.import-export-group h3 {
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.button-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.settings-btn-force {
+    position: relative;
+
+    display: flex!important;
+    margin: 0!important;
+    width: 94% !important;
+
+
+}
+
+
+.settings-btn.blue {
+    background-color: #d8e3f3;
+    color: #0b3e37;
+}
+
+.settings-btn.cyan {
+    background-color: #93e6f4;
+    color: #095046;
+
+}
+
+.settings-btn.gray {
+    background-color: #a2f3a9;
+    color: #223c22;
+
+}
+
+.settings-btn:hover {
+    opacity: 0.8;
+}
+
+
+
+.card-tag.filtered {
+    border: 2px solid #007bff;
+    background-color: hsla(210, 79%, 85%, 0.49) !important;
+    font-weight: bold;
+}
+
+#previewTranslation {
+    position: relative;
+    width: 750px;
+}
+
+#previewTranslation button{
+    position: absolute;
+    right: 0;
+    top: 10px;
+}
+
+.speak-btn.active {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.player .toolbar-btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    scale: 0.8;
+}
+
+
+.highlighted-sentence {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 0 6px ;
+    border-radius: 6px;
+    color: #333;
+    box-shadow: 0 0 0 2px #ffeeba;
+    transition: all ease-in-out 300ms;
+}
+#shuffleCardBtn.active {
+    background-color: #1976d2;
+    color: white;
+    border: 2px solid #1976d2;
+}
+
+.toolbar-btn.active {
+    background-color: #0077cc;
+    color: white;
+}
+
+
+.toolbar-btn.active {
+    background-color: #0077cc;
+    color: white;
+    border-color: #0077cc;
+}
+
+.dark .card.playing {
+    background-color: #263238 !important; /* მუქი ლურჯ-ნაცრისფერი */
+    box-shadow: 0 0 0 3px #4fc3f7; /* ღია ცისფერი ჩრდილი */
+    color: #fff; /* სურვილისამებრ ტექსტის ფერიც */
+}
+
+
+.card.playing {
+    background-color: #e3f2fd !important;
+    box-shadow: 0 0 0 3px #90caf9;
+    transition: all 0.3s ease;
+}
+
+
+
+#previewGeoSpeakBtn {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.player{
+    display: flex;
+    gap: 10px;
+    padding: 4px;
+    background-color: #eaeaea;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    z-index: 9999;
+}
+
+#modalOverlay, #tagLibraryModal, #settingsModal{
+    z-index: 99999;
+}
+
+
+.dark .preview-sticky {
+    position: sticky;
+    width: 100%;
+    top: 0;
+    z-index: 10; /* საჭიროებისამებრ უფრო მაღალი მნიშვნელობა */
+    background: rgb(30,30,30);
+    background: linear-gradient(180deg, rgba(30,30,30,1) 75%, rgba(30,30,30,0.7991071428571428) 90%, rgba(30,30,30,0.38174019607843135) 98%, rgba(30,30,30,0) 100%);
+}
+.preview-sticky {
+    position: sticky;
+    width: 100%;
+    top: 0;
+    z-index: 10; /* საჭიროებისამებრ უფრო მაღალი მნიშვნელობა */
+    background: rgb(255,255,255);
+    background: linear-gradient(180deg, rgba(255,255,255,1) 75%, rgba(255,255,255,0.8187149859943977) 90%, rgba(255,255,255,0.4853816526610645) 98%, rgba(255,255,255,0) 100%);
+}
+
+.input-container {
+    width: 100%;
+    /* Input, Textarea */
+    /* Span */
+    /* Corners */
+    /* Hover */
+    /* Placeholder-shown */
+    /* Focus */
+    /* Disabled */
+    /* Faster transition in Safari for less noticable fractional font-size issue */
+    /* Autofilled */
+}
+.input-container .material-input {
+    --pure-material-safari-helper1: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+    position: relative;
+    display: inline-block;
+    padding-top: 6px;
+    font-family: var(--pure-material-font, "Roboto", "Segoe UI", BlinkMacSystemFont, system-ui, -apple-system);
+    font-size: 16px;
+    line-height: 1.5;
+    width: 100%;
+    overflow: hidden;
+}
+.input-container .material-input > input,
+.input-container .material-input > textarea {
+    box-sizing: border-box;
+    margin: 0;
+    border: solid 1px; /* Safari */
+    border-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+    border-top-color: transparent;
+    border-radius: 6px;
+    padding: 12px 10px 16px;
+    width: 100%;
+    height: inherit;
+    color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.87);
+    background-color: rgba(255, 255, 255, 0.47);
+    box-shadow: none; /* Firefox */
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    caret-color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+    transition: border 0.2s, box-shadow 0.2s;
+}
+.input-container .material-input > input + span,
+.input-container .material-input > textarea + span {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    display: flex;
+    border-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+    width: 100%;
+    max-height: 100%;
+    color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+    font-size: 75%;
+    line-height: 15px;
+    cursor: text;
+    transition: color 0.2s, font-size 0.2s, line-height 0.2s;
+}
+.input-container .material-input > input + span::before,
+.input-container .material-input > input + span::after,
+.input-container .material-input > textarea + span::before,
+.input-container .material-input > textarea + span::after {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    margin-top: 6px;
+    border-top: solid 1px;
+    border-top-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+    min-width: 10px;
+    height: 8px;
+    pointer-events: none;
+    box-shadow: inset 0 1px transparent;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-container .material-input > input + span::before,
+.input-container .material-input > textarea + span::before {
+    margin-right: 4px;
+    border-left: solid 1px transparent;
+    border-radius: 6px 0;
+}
+.input-container .material-input > input + span::after,
+.input-container .material-input > textarea + span::after {
+    flex-grow: 1;
+    margin-left: 4px;
+    border-right: solid 1px transparent;
+    border-radius: 0 6px;
+}
+.input-container .material-input:hover > input,
+.input-container .material-input:hover > textarea {
+    border-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.87);
+    border-top-color: transparent;
+}
+.input-container .material-input:hover > input + span::before,
+.input-container .material-input:hover > textarea + span::before,
+.input-container .material-input:hover > input + span::after,
+.input-container .material-input:hover > textarea + span::after {
+    border-top-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.87);
+}
+.input-container .material-input:hover > input:not(:focus):placeholder-shown,
+.input-container .material-input:hover > textarea:not(:focus):placeholder-shown {
+    border-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.87);
+}
+.input-container .material-input > input:not(:focus):placeholder-shown,
+.input-container .material-input > textarea:not(:focus):placeholder-shown {
+    border-top-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+}
+.input-container .material-input > input:not(:focus):placeholder-shown + span,
+.input-container .material-input > textarea:not(:focus):placeholder-shown + span {
+    font-size: inherit;
+    line-height: 68px;
+}
+.input-container .material-input > input:not(:focus):placeholder-shown + span::before,
+.input-container .material-input > textarea:not(:focus):placeholder-shown + span::before,
+.input-container .material-input > input:not(:focus):placeholder-shown + span::after,
+.input-container .material-input > textarea:not(:focus):placeholder-shown + span::after {
+    border-top-color: transparent;
+}
+.input-container .material-input > input:focus,
+.input-container .material-input > textarea:focus {
+    border-color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+    border-top-color: transparent;
+    box-shadow: inset 1px 0 var(--pure-material-safari-helper1), inset -1px 0 var(--pure-material-safari-helper1), inset 0 -1px var(--pure-material-safari-helper1);
+    outline: none;
+}
+.input-container .material-input > input:focus + span,
+.input-container .material-input > textarea:focus + span {
+    color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+}
+.input-container .material-input > input:focus + span::before,
+.input-container .material-input > input:focus + span::after,
+.input-container .material-input > textarea:focus + span::before,
+.input-container .material-input > textarea:focus + span::after {
+    border-top-color: var(--pure-material-safari-helper1) !important;
+    box-shadow: inset 0 1px var(--pure-material-safari-helper1);
+}
+.input-container .material-input > input:disabled,
+.input-container .material-input > input:disabled + span,
+.input-container .material-input > textarea:disabled,
+.input-container .material-input > textarea:disabled + span {
+    border-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.38) !important;
+    border-top-color: transparent !important;
+    color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.38);
+    pointer-events: none;
+}
+.input-container .material-input > input:disabled + span::before,
+.input-container .material-input > input:disabled + span::after,
+.input-container .material-input > textarea:disabled + span::before,
+.input-container .material-input > textarea:disabled + span::after {
+    border-top-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.38) !important;
+}
+.input-container .material-input > input:disabled:placeholder-shown,
+.input-container .material-input > input:disabled:placeholder-shown + span,
+.input-container .material-input > textarea:disabled:placeholder-shown,
+.input-container .material-input > textarea:disabled:placeholder-shown + span {
+    border-top-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.38) !important;
+}
+.input-container .material-input > input:disabled:placeholder-shown + span::before,
+.input-container .material-input > input:disabled:placeholder-shown + span::after,
+.input-container .material-input > textarea:disabled:placeholder-shown + span::before,
+.input-container .material-input > textarea:disabled:placeholder-shown + span::after {
+    border-top-color: transparent !important;
+}
+@media not all and (min-resolution: 0.001dpcm) {
+    @supports (-webkit-appearance: none) {
+        .input-container .material-input > input,
+        .input-container .material-input > input + span,
+        .input-container .material-input > textarea,
+        .input-container .material-input > textarea + span,
+        .input-container .material-input > input + span::before,
+        .input-container .material-input > input + span::after,
+        .input-container .material-input > textarea + span::before,
+        .input-container .material-input > textarea + span::after {
+            transition-duration: 0.1s;
+        }
+    }
+}
+.input-container .material-input > input:-webkit-autofill,
+.input-container .material-input > textarea:-webkit-autofill {
+    /* Here you can define the styles for autofilled input field. */
+}
+.input-container .material-input > input:-webkit-autofill + span,
+.input-container .material-input > textarea:-webkit-autofill + span {
+    /* Here you can define the styles for the span element when the input is autofilled. */
+    color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+}
+.input-container .material-input > input:-webkit-autofill + span::before,
+.input-container .material-input > input:-webkit-autofill + span::after,
+.input-container .material-input > textarea:-webkit-autofill + span::before,
+.input-container .material-input > textarea:-webkit-autofill + span::after {
+    /* Here you can define the styles for the pseudo-elements of the span when the input is autofilled. */
+    border-top-color: var(--pure-material-safari-helper1) !important;
+    box-shadow: inset 0 1px var(--pure-material-safari-helper1);
+}
+
+.input-container .material-select{
+    cursor: pointer!important;
+
+}
+
+.material-select {
+    position: relative;
+    display: inline-block;
+    font-family: var(--pure-material-font, "Roboto", "Segoe UI", BlinkMacSystemFont, system-ui, -apple-system);
+    font-size: 16px;
+    line-height: 1.5;
+    width: 100%;
+    overflow: hidden;
+    padding-top: 6px;
+}
+.material-select::after {
+    content: none;
+
+    position: absolute;
+    right: 10px;
+    top: 22px;
+    color: gray;
+}
+
+.material-select > select {
+    box-sizing: border-box;
+    margin: 0;
+    border: solid 1px;
+    border-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+    border-top-color: transparent;
+    border-radius: 6px;
+    padding: 15px 13px 15px;
+    width: 100%;
+    color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.87);
+    background-color: rgba(255, 255, 255, 0.3);
+    box-shadow: none;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    caret-color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+    transition: border 0.2s, box-shadow 0.2s;
+    appearance: none; /* remove default arrow */
+    cursor: pointer;
+
+}
+
+.select-arrow-icon {
+    position: absolute;
+    right: 12px;
+    top: 55%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: gray;
+}
+
+
+.material-select > select:focus + span::before,
+.material-select > select:focus + span::after {
+    border-top-color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+    box-shadow: inset 0 1px rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+}
+
+
+.material-select > select + span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    border-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+    width: 100%;
+    max-height: 100%;
+    color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+    font-size: 75%;
+    line-height: 15px;
+    cursor: text;
+    transition: color 0.2s, font-size 0.2s, line-height 0.2s;
+}
+
+/* Placeholder-shown */
+.material-select > select:not(:focus):placeholder-shown {
+    border-top-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+}
+
+.material-select > select + span::before,
+.material-select > select + span::after {
+    content: "";
+    display: block;
+    box-sizing: border-box;
+    margin-top: 6px;
+    border-top: solid 1px;
+    border-top-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
+    min-width: 10px;
+    height: 8px;
+    pointer-events: none;
+    box-shadow: inset 0 1px transparent;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.material-select > select + span::before {
+    margin-right: 4px;
+    border-left: solid 1px transparent;
+    border-radius: 6px 0;
+}
+
+.material-select > select + span::after {
+    flex-grow: 1;
+    margin-left: 4px;
+    border-right: solid 1px transparent;
+    border-radius: 0 6px;
+}
+
+.material-select:active > select + span::before,
+.material-select:active > select + span::after {
+    border-top-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.87);
+}
+
+.material-select > select:focus,
+.material-select > select:active {
+    border-color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+    border-top-color: transparent;
+    box-shadow: inset 1px 0 var(--pure-material-safari-helper1), inset -1px 0 var(--pure-material-safari-helper1), inset 0 -1px var(--pure-material-safari-helper1);
+    outline: none;
+}
+
+.material-select > select:not(:focus):placeholder-shown + span {
+    font-size: inherit;
+    line-height: 68px;
+    background-color: red;
+}
+
+.material-select > select:focus + span,
+.material-select > select:active + span {
+    color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
+}
+
+
+.fixed-player-wrapper {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999999;
+}
+
+
+.mobile-toggle-btn{
+    display: none;
+}
+
+/* ღილაკი დამატების მრგვალი სტილისთვის */
+#addCardBtn {
+    position: fixed;
+    bottom: 20px;  /* ქვედა */
+    right: 20px;  /* მარჯვნივ */
+    background-color: #0077cc; /* ლურჯი */
+    color: white;
+    border: none;
+    border-radius: 50%; /* მრგვალი */
+    padding: 20px 22px;
+    font-size: 1.8rem;
+    cursor: pointer;
+    z-index: 9999; /* მაღლა რომ იყოს */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* ჩრდილი */
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+#addCardBtn:hover {
+    background-color: #03538c;
+    transform: scale(1.1);  /* ღილაკის ზომის გაზრდა */
+}
+.mobile-sidebar-btn {
+    display: none;
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    z-index: 9999;
+    background-color: #0077cc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+
+}
+.mobile-sidebar-btn:hover {
+    background-color: #005fa3;
+}
+
+
+@media (max-width: 768px) {
+    .preview-modal{
+        top: 0;
+    }
+    #previewTranslation{
+        width: 100%;
+    }
+    .sidebar{
+        top: 80px;
+    }
+    .mobile-sidebar-btn {
+        display: block; /* მხოლოდ მობილურზე გამოჩნდეს */
+    }
+    .top {
+        display: none;
+    }
+
+
+    .top.show {
+        display: block;
+        z-index: 99999;
+    }
+    .top-right{
+        justify-content: center;
+        padding-bottom: 8px;
+    }
+
+    #toggleSidebarBtn{
+        display: none;
+    }
+
+    .add-card-btn {
+        display: block; /* გამოჩნდება მობილურზე */
+        transform: translateY(-90px);
+        scale: 0.8;
+    }
+    .add-card-btn:hover {
+        display: block; /* გამოჩნდება მობილურზე */
+        transform: translateY(-90px);
+    }
+    .mobile-toggle-btn {
+        display: block;
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        z-index: 9999999;
+        background-color: #0077cc;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+
+    }
+
+    .fixed-player-wrapper {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+    }
+
+    .player {
+        display: flex;
+        justify-content: space-around;
+        background-color: #f0f0f0;
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .player .toolbar-btn {
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        padding: 6px 10px;
+    }
+
+    .toolbar-actions{
+        bottom: 90px;
+    }
+
+    #statsModal p{
+        font-size: 14px;
+    }
+    #statsBtn{
+        font-size: 0;
+    }
+    #statsBtn i {
+        font-size: 1.2rem; /* აიკონის ზომა დარჩეს */
+    }
+
+}
+
+
+
+/* მართავთ სპეციფიკურად training-modal-სა და მის შიგთავსს */
+@media (max-width: 768px) {
+    .training-close{
+        position: absolute;
+        top: 5px;
+        background-color: #ffffff;
+        border-radius: 4px;
+        color: black!important;
+        font-size: 1.5rem;
+    }
+
+    .dark .training-close{
+        position: absolute;
+        top: 5px;
+        background-color: #ffffff;
+        border-radius: 4px;
+        color: #ffffff;
+        font-size: 1.5rem;
+    }
+    /* თავად მოკრიალე ეს Selector-ები შენს HTML სტრუქტურაზე */
+    .training-modal-content {
+        width: 95%!important;    /* ეკრანის თითქმის სრული სიგანე */
+        height: 90%!important;   /* სიმაღლეც თითქმის მთლიანი */
+        border-radius: 10px;     /* შეიძლება 0px-ის დაყენებაც */
+        overflow: hidden;        /* თუ გინდა, რომ შიგნით scroll იყოს */
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Tabs wrap ანუ ავტომატურად მომდინარეობს, თუ ბევრია ღილაკი */
+    .training-tabs {
+        flex-wrap: wrap;
+        justify-content: center; /* ცენტრში */
+        gap: 8px;
+    }
+
+    /* თავად tab ღილაკები – მცირე ეკრანზე უფრო კომპაქტური */
+    .training-tab {
+        flex: 1 1 auto;
+        font-size: 0.9rem;  /* შედარებით მცირე ზომა */
+        padding: 8px 12px;
+        margin: 4px 0;
+    }
+
+    /* globalTrainingSettings შეიკუმშოს */
+    #globalTrainingSettings {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+
+    /* იქ, სადაც „QUIZ სექცია“ და სხვ. პირდაპირ tab-content-ში */
+    .training-tab-content {
+        overflow-y: auto;
+        flex-grow: 1;
+        padding: 10px;    /* დანარჩენი შიგთავსი */
+        font-size: 0.9rem;
+    }
+
+    /* თუ გინდა, რომ tabs თვითონაც გადასახვევი იყოს ჰორიზონტალურად */
+    .training-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    .training-tab {
+        white-space: normal; /* ისე, რომ ტექსტი ჩამოვარდეს */
+    }
+
+}
+
+
+
+@media (max-width: 370px) {
+    .toolbar-actions{
+        left: 0;
+        transform: translateX(10%);
+    }
+
+}
+
