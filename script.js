@@ -403,6 +403,8 @@ function populateVoiceDropdown() {
     allowedVoicesEnglish.forEach(name => {
         const voice = voices.find(v => v.name === name);
         if (voice) {
+            if (!voice) return; // skip if voice not found
+
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -413,6 +415,7 @@ function populateVoiceDropdown() {
             voiceSelect.appendChild(option);
         }
     });
+
 }
 
 
@@ -749,6 +752,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadVoices();
+    loadVoicesWithDelay(); // <-- ახალი ფუნქცია
 
     if (stored) {
         const data = JSON.parse(stored);
@@ -1458,6 +1462,20 @@ function loadVoices() {
     populateVoiceDropdown(); // ინგლისური
     populateGeorgianDropdown(); // ქართული
 }
+
+function loadVoicesWithDelay(retry = 0) {
+    const voices = speechSynthesis.getVoices();
+
+    if (voices.length > 0 || retry >= 10) {
+        loadVoices(); // ← შენი არსებული ფუნქცია
+        return;
+    }
+
+    setTimeout(() => {
+        loadVoicesWithDelay(retry + 1);
+    }, 200);
+}
+
 
 function populateGeorgianDropdown() {
     const voices = speechSynthesis.getVoices();
