@@ -39,6 +39,7 @@ function delay(ms) {
 function loadSpeechRates() {
     const englishRateSlider = document.getElementById('englishRateSlider');
     const georgianRateSlider = document.getElementById('georgianRateSlider');
+
     englishRateSlider.value = localStorage.getItem(ENGLISH_RATE_KEY) || 1;
     georgianRateSlider.value = localStorage.getItem(GEORGIAN_RATE_KEY) || 1;
 }
@@ -48,12 +49,9 @@ function populateVoiceDropdown() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
 
-    let hasMatch = false;
-    voices.forEach(voice => {
-        if (
-            allowedVoicesEnglish.includes(voice.name) ||
-            voice.lang.startsWith('en')
-        ) {
+    allowedVoicesEnglish.forEach(name => {
+        const voice = voices.find(v => v.name === name);
+        if (voice) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -62,14 +60,8 @@ function populateVoiceDropdown() {
                 selectedVoice = voice;
             }
             voiceSelect.appendChild(option);
-            hasMatch = true;
         }
     });
-
-    if (!selectedVoice && voices.length > 0) {
-        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-        localStorage.setItem(VOICE_STORAGE_KEY, selectedVoice.name);
-    }
 }
 
 function populateGeorgianDropdown() {
@@ -77,12 +69,9 @@ function populateGeorgianDropdown() {
     const geoSelect = document.getElementById('georgianVoiceSelect');
     geoSelect.innerHTML = '';
 
-    let hasMatch = false;
-    voices.forEach(voice => {
-        if (
-            allowedVoicesGeorgian.includes(voice.name) ||
-            voice.lang === 'ka-GE'
-        ) {
+    allowedVoicesGeorgian.forEach(name => {
+        const voice = voices.find(v => v.name === name);
+        if (voice) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -91,29 +80,20 @@ function populateGeorgianDropdown() {
                 selectedGeorgianVoice = voice;
             }
             geoSelect.appendChild(option);
-            hasMatch = true;
         }
     });
-
-    if (!selectedGeorgianVoice && voices.length > 0) {
-        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || null;
-        if (selectedGeorgianVoice) {
-            localStorage.setItem(GEORGIAN_VOICE_KEY, selectedGeorgianVoice.name);
-        }
-    }
 }
 
 function loadVoices() {
     const voices = speechSynthesis.getVoices();
-
     populateVoiceDropdown();
     populateGeorgianDropdown();
 
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-    selectedVoice = voices.find(v => v.name === storedVoice) || selectedVoice;
+    selectedVoice = voices.find(v => v.name === storedVoice);
 
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || selectedGeorgianVoice;
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
 }
 
 function loadVoicesWithDelay(retry = 0) {
@@ -128,12 +108,7 @@ function loadVoicesWithDelay(retry = 0) {
 speechSynthesis.onvoiceschanged = loadVoices;
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis) return;
-
-    if (!voiceObj) {
-        const voices = speechSynthesis.getVoices();
-        voiceObj = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
-    }
+    if (!window.speechSynthesis || !voiceObj) return;
 
     if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
         speechSynthesis.cancel();
@@ -200,9 +175,4 @@ document.addEventListener('click', (e) => {
     } else {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
-});
-
-window.addEventListener('load', () => {
-    loadSpeechRates();
-    loadVoicesWithDelay();
 });
