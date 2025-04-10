@@ -176,19 +176,21 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
-function triggerAndroidVoiceEngine() {
-    const voices = speechSynthesis.getVoices();
-    if (voices.length > 0) return; // უკვე მზადაა
+function forceInitializeVoices() {
+    if (speechSynthesis.getVoices().length > 0) return;
 
-    const utterance = new SpeechSynthesisUtterance(' ');
-    utterance.volume = 0;
-    utterance.rate = 0.1;
-    utterance.pitch = 0.1;
-    speechSynthesis.speak(utterance);
+    const dummyUtterance = new SpeechSynthesisUtterance(' ');
+    dummyUtterance.volume = 0; // არ გამოიტანს ხმას
+    dummyUtterance.rate = 1;
+    dummyUtterance.pitch = 1;
+    speechSynthesis.speak(dummyUtterance);
 }
 
+// ეს თავიდან ამუშავებს ხმებს, Android Edge-სთვის სასიცოცხლოდ მნიშვნელოვანია
 window.addEventListener('load', () => {
+    forceInitializeVoices();         // ✅ first trigger
     loadSpeechRates();
-    loadVoicesWithDelay();
-    triggerAndroidVoiceEngine(); // 🎯 ეს არის ეგ "read aloud"-ის ჩართვის სიმულაცია
+    loadVoicesWithDelay();           // ✅ fallback load
 });
+
+
