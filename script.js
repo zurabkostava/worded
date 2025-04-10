@@ -699,7 +699,9 @@ document.addEventListener('DOMContentLoaded', () => {
             XLSX.writeFile(workbook, "template.xlsx");
         });
     }
-
+    speechSynthesis.getVoices(); // trigger
+    speechSynthesis.onvoiceschanged = loadVoices; // fallback
+    loadVoicesWithRetry(); // ✅ ეს ჩვენი ახალი retry მექანიზმია
     loadVoices();
     loadVoicesWithDelay(); // <-- ახალი ფუნქცია
 
