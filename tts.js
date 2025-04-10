@@ -202,7 +202,19 @@ document.addEventListener('click', (e) => {
     }
 });
 
+function forceVoiceInit(callback) {
+    const dummy = new SpeechSynthesisUtterance('...');
+    dummy.volume = 0; // არ ისმოდეს
+    dummy.rate = 10;  // ძალიან სწრაფი, სწრაფად დასრულდეს
+    dummy.pitch = 0;
+    dummy.onend = () => {
+        setTimeout(callback, 200); // დაყოვნება, რომ getVoices მზად იყოს
+    };
+    speechSynthesis.speak(dummy);
+}
+
+
 window.addEventListener('load', () => {
     loadSpeechRates();
-    loadVoicesWithDelay();
+    forceVoiceInit(loadVoicesWithDelay); // ✅ პირველი გააღვიძებს, შემდეგ გამოიძახებს ხმებს
 });
