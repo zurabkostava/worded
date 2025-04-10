@@ -10,76 +10,6 @@ let selectedGeorgianVoice = null;
 let isSpeaking = false;
 let lastSpokenButton = null;
 
-
-
-function populateVoicesSafe() {
-    return new Promise((resolve) => {
-        let voices = speechSynthesis.getVoices();
-
-        if (voices.length !== 0) {
-            resolve(voices);
-        } else {
-            // Try multiple times until voices load (fallback)
-            const interval = setInterval(() => {
-                voices = speechSynthesis.getVoices();
-                if (voices.length !== 0) {
-                    clearInterval(interval);
-                    resolve(voices);
-                }
-            }, 200);
-
-            // Timeout failsafe after 3 seconds
-            setTimeout(() => {
-                clearInterval(interval);
-                resolve([]);
-            }, 3000);
-        }
-    });
-}
-async function initVoiceDropdowns() {
-    const voices = await populateVoicesSafe();
-
-    const voiceSelect = document.getElementById('voiceSelect');
-    const geoSelect = document.getElementById('georgianVoiceSelect');
-
-    voiceSelect.innerHTML = '';
-    geoSelect.innerHTML = '';
-
-    voices.forEach(voice => {
-        const opt = document.createElement('option');
-        opt.value = voice.name;
-        opt.textContent = voice.name;
-
-        // English voices
-        if (voice.lang.startsWith("en") && allowedVoicesEnglish.includes(voice.name)) {
-            voiceSelect.appendChild(opt);
-            if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
-                opt.selected = true;
-                selectedVoice = voice;
-            }
-        }
-
-        // Georgian voices
-        if (voice.lang === "ka-GE" || allowedVoicesGeorgian.includes(voice.name)) {
-            geoSelect.appendChild(opt);
-            if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
-                opt.selected = true;
-                selectedGeorgianVoice = voice;
-            }
-        }
-    });
-
-    // If no selected voice loaded from storage, pick default
-    if (!selectedVoice && voiceSelect.options.length > 0) {
-        selectedVoice = voices.find(v => v.name === voiceSelect.value);
-    }
-
-    if (!selectedGeorgianVoice && geoSelect.options.length > 0) {
-        selectedGeorgianVoice = voices.find(v => v.name === geoSelect.value);
-    }
-}
-
-
 const allowedVoicesEnglish = [
     "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
     "Microsoft AvaMultilingual Online (Natural) - English (United States)",
@@ -246,9 +176,3 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
-window.addEventListener('DOMContentLoaded', () => {
-    loadSpeechRates();
-    initVoiceDropdowns();
-});
-selectedVoice = speechSynthesis.getVoices().find(v => v.lang.startsWith("en"));
-selectedGeorgianVoice = speechSynthesis.getVoices().find(v => v.lang === "ka-GE");
