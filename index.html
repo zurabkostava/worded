@@ -25,6 +25,201 @@
     </script>
     <script defer="" src="puzzle.js">
     </script>
+    <!-- შენიშნე, რომ ორი ახალი ფუნქცია დაგვჭირდება:
+            getDocs, doc, setDoc, deleteDoc -->
+    <script type="module">
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            getDocs,
+            doc,
+            setDoc,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyArftPeH-SoIwmm2aKLDHBTE8M4DQ5jLM8",
+            authDomain: "worded-1a455.firebaseapp.com",
+            projectId: "worded-1a455",
+            storageBucket: "worded-1a455.appspot.com",
+            messagingSenderId: "385741553786",
+            appId: "1:385741553786:web:c9e1d0d5bb662950f9fbc3",
+            measurementId: "G-9QPQ3JE2MZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.getElementById("pullFromFirestoreBtn").addEventListener("click", pullAllCardsFromFirebase);
+
+        async function pullAllCardsFromFirebase() {
+            try {
+                const snapshot = await getDocs(collection(db, "cards"));
+                const fetchedCards = [];
+
+                // წამოვიღოთ ლოკალური მონაცემები
+                const stored = localStorage.getItem("english_cards_app");
+                const localData = stored ? JSON.parse(stored) : { cards: [], tagLibrary: [] };
+
+                // დროებითი სტრუქტურა ძიებისთვის
+                const localWordsMap = {};
+                localData.cards.forEach(card => {
+                    localWordsMap[card.word.trim().toLowerCase()] = card;
+                });
+
+                // ცალკე შევკრიბოთ ყველა თეგი, მათ შორის ახლად ჩამოტანილი
+                const allTagsSet = new Set(localData.tagLibrary || []);
+
+                snapshot.forEach(docSnap => {
+                    const cardData = docSnap.data();
+                    const wordKey = cardData.word.trim().toLowerCase();
+                    cardData.firebaseId = docSnap.id;
+
+                    // შეგვაქვს მისი ყველა თეგა მთავარ თეგების ბიბლიოთეკაში
+                    if (Array.isArray(cardData.tags)) {
+                        cardData.tags.forEach(t => {
+                            allTagsSet.add(t);
+                        });
+                    }
+
+                    if (localWordsMap[wordKey]) {
+                        // უკვე არსებობს → განახლება
+                        Object.assign(localWordsMap[wordKey], {
+                            ...cardData,
+                            firebaseId: docSnap.id,
+                        });
+                    } else {
+                        // ახალი ბარათი
+                        fetchedCards.push(cardData);
+                    }
+                });
+
+                // კომპონირება: ძველი ბარათები + ახალი ბარათები
+                const combinedCards = [...localData.cards, ...fetchedCards];
+
+                // თეგების ბიბლიოთეკის განახლება
+                localData.tagLibrary = [...allTagsSet];
+
+                // ვინახავთ ყველაფერს
+                localStorage.setItem("english_cards_app", JSON.stringify({
+                    cards: combinedCards,
+                    tagLibrary: [...allTagsSet]
+                }));
+
+                // თუ გაქვს ფუნქცია, რომელიც თავიდან კითხულობს localStorage-ს და UI-ს ხატავს
+                if (window.loadCardsFromStorage) {
+                    document.getElementById('cardContainer').innerHTML = '';
+                    window.loadCardsFromStorage();
+
+                    // ქარდების ვიზუალური განახლება
+                    document.querySelectorAll('.card').forEach(updateCardVisuals);
+                }
+
+                alert("✔ Firestore-დან ჩამოტვირთული ბარათები დაემატა და თეგებიც განახლდა!");
+
+            } catch (err) {
+                console.error("❌ Firestore Load შეცდომა:", err);
+                alert("ვერ მოხერხდა ჩამოტვირთვა Firestore-დან!");
+            }
+        }
+
+
+
+
+
+        document.getElementById("syncAllBtn").addEventListener("click", () => {
+            syncAllCardsToFirebase()
+                .then(() => {
+                    alert("სინქრონიზაცია დასრულდა წარმატებით!");
+                })
+                .catch(err => {
+                    console.error("სინქრონიზაციის შეცდომა:", err);
+                    alert("სინქრონიზაცია ვერ მოხერხდა!");
+                });
+        });
+
+        async function syncAllCardsToFirebase() {
+            // 1. წამოვიღოთ localStorage JSON
+            const stored = localStorage.getItem("english_cards_app");
+            if (!stored) {
+                // თუ საერთოდ არ არსებობს
+                throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
+            }
+
+            const data = JSON.parse(stored);
+
+            // 2. წამოვიღოთ Firestore-ის ყველა დოკი
+            const snapshot = await getDocs(collection(db, "cards"));
+            const serverMap = {}; // { docId: docData }
+            snapshot.forEach(docSnap => {
+                const cardData = docSnap.data();
+                const wordKey = cardData.word.trim().toLowerCase();
+                cardData.firebaseId = docSnap.id;
+
+                // ✅ ყოველი ბარათის თეგები ბიბლიოთეკაში
+                if (Array.isArray(cardData.tags)) {
+                    cardData.tags.forEach(tag => allTags.add(tag));
+                }
+
+                if (localWordsMap[wordKey]) {
+                    Object.assign(localWordsMap[wordKey], {
+                        ...cardData,
+                        firebaseId: docSnap.id,
+                    });
+                } else {
+                    fetchedCards.push(cardData);
+                }
+            });
+
+
+            // 3. თუ localStorage-ში არის ბარათები, ატვირთე/განაახლე
+            if (data.cards && data.cards.length) {
+                for (const card of data.cards) {
+                    const docData = {
+                        word: card.word,
+                        mainTranslations: card.mainTranslations,
+                        extraTranslations: card.extraTranslations,
+                        tags: card.tags,
+                        englishSentences: card.englishSentences,
+                        georgianSentences: card.georgianSentences,
+                        progress: card.progress || 0,
+                        updated: Date.now()
+                    };
+
+                    if (!card.firebaseId) {
+                        // ახალი ბარათი
+                        const docRef = await addDoc(collection(db, "cards"), docData);
+                        card.firebaseId = docRef.id;
+                    } else {
+                        // არსებული ბარათი
+                        await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
+                    }
+                }
+            }
+
+            // 4. წაშლა Firestore-ში არსებული დოკების, რომლებიც ლოკალურად აღარ არსებობს
+            const localIds = new Set(
+                (data.cards || []) // თუ cards არაა, მაინც ცარიელ მასივს გავუშვებთ
+                    .filter(c => c.firebaseId)
+                    .map(c => c.firebaseId)
+            );
+
+            for (const docId of Object.keys(serverMap)) {
+                if (!localIds.has(docId)) {
+                    await deleteDoc(doc(db, "cards", docId));
+                }
+            }
+
+            // 5. შევინახოთ ახალდანიშნული firebaseId-ები
+            localStorage.setItem("english_cards_app", JSON.stringify(data));
+        }
+    </script>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
     <!-- Tagify CSS -->
     <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet"/>
@@ -65,8 +260,14 @@
                     </i>
                 </label>
             </div>
+
+
         </div>
         <div class="top-right">
+            <button class="toolbar-btn" id="pullFromFirestoreBtn">Sync</button>
+
+
+            <button class="toolbar-btn" id="syncAllBtn">Publish</button>
             <button id="toggleDarkModeBtn" title="Dark Mode Toggle">
                 <i class="fas fa-moon">
                 </i>
@@ -113,6 +314,8 @@
         <div class="toolbar-center">
         </div>
         <div class="toolbar-right">
+
+
             <button class="toolbar-btn" id="statsBtn" title="სტატისტიკა">
                 <i class="fas fa-chart-pie">
                 </i>
@@ -391,6 +594,8 @@
                     🧾 ჩამოტვირთე შაბლონი
                 </button>
                 </input>
+
+
             </div>
         </div>
         <div class="modal-actions" style="margin-top: 20px;">
