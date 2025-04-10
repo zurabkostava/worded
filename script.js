@@ -397,14 +397,14 @@ const allowedVoicesGeorgian = [
 
 
 function populateVoiceDropdown() {
-    const voices = speechSynthesis.getVoices();
-    voiceSelect.innerHTML = '';
+    if (!voiceSelect) return;
+    const voices = speechSynthesis.getVoices() || [];
+
+    voiceSelect.innerHTML = '<option value="" disabled hidden>აირჩიე ხმა</option>';
 
     allowedVoicesEnglish.forEach(name => {
         const voice = voices.find(v => v.name === name);
         if (voice) {
-            if (!voice) return; // skip if voice not found
-
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -415,8 +415,8 @@ function populateVoiceDropdown() {
             voiceSelect.appendChild(option);
         }
     });
-
 }
+
 
 
 const TEXTAREA_STORAGE_KEY = 'sentence_textareas_data';
@@ -781,7 +781,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }
     });
-
+    loadVoices(); // იპოვოს შენახული ხმები
+    setTimeout(() => speechSynthesis.getVoices(), 100); // Edge-ზე trigger
 
 
     function speakWord(text) {
@@ -1453,22 +1454,38 @@ let selectedVoice = null;
 
 function loadVoices() {
     const voices = speechSynthesis.getVoices();
+
+    // fallback for Edge
+    if (!voices.length) {
+        // ხელით trigger
+        speechSynthesis.onvoiceschanged = () => {
+            populateVoiceDropdown();
+            populateGeorgianDropdown();
+
+            const allVoices = speechSynthesis.getVoices();
+
+            // ისევ აირჩიე შენახული ხმები
+            const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
+            const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
+
+            selectedVoice = allVoices.find(v => v.name === storedVoice);
+            selectedGeorgianVoice = allVoices.find(v => v.name === storedGeo);
+
+            speechSynthesis.onvoiceschanged = null; // გაასუფთავე
+        };
+        return;
+    }
+
     populateVoiceDropdown();
     populateGeorgianDropdown();
-    // ინგლისური ხმა
+
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-    selectedVoice = voices.find(v => v.name === storedVoice) ||
-        voices.find(v => v.name.includes('Maisie') && v.lang === 'en-GB');
-
-    // ქართული ხმა
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) ||
-        voices.find(v => v.name.includes('Eka') || v.name.includes('Giorgi'));
 
-    // ასევე ავტომატურად შევსდეს dropdown-ები, როცა ხმები იტვირთება
-    populateVoiceDropdown(); // ინგლისური
-    populateGeorgianDropdown(); // ქართული
+    selectedVoice = voices.find(v => v.name === storedVoice);
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
 }
+
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
@@ -1485,9 +1502,8 @@ function loadVoicesWithDelay(retry = 0) {
 
 
 function populateGeorgianDropdown() {
-    const voices = speechSynthesis.getVoices();
+    const voices = speechSynthesis.getVoices() || [];
     const geoSelect = document.getElementById('georgianVoiceSelect');
-
     if (!geoSelect) return;
 
     geoSelect.innerHTML = '<option value="" disabled hidden>აირჩიე ხმა</option>';
@@ -1506,6 +1522,7 @@ function populateGeorgianDropdown() {
         }
     });
 }
+
 
 
 
