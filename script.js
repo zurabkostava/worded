@@ -55,14 +55,6 @@ mobileSidebarBtn.addEventListener('click', () => {
     filterCardsByTags(); // ბარათებიც განულდეს
 });
 
-// ⛑️ Fix for Microsoft Edge Read Aloud not working
-// ეს პატარა ეშმაკობა დებს პირობითი <meta> თუ არ არსებობს, რომ Edge-ის Accessibility იმუშაოს
-if (!document.querySelector('meta[name="msapplication-tap-highlight"]')) {
-    const meta = document.createElement('meta');
-    meta.name = 'msapplication-tap-highlight';
-    meta.content = 'no';
-    document.head.appendChild(meta);
-}
 
 
 // ... სადღაც ზედა ნაწილში გამოვიყვანოთ ელემენტები:
