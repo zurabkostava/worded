@@ -49,9 +49,9 @@ function populateVoiceDropdown() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
 
-    allowedVoicesEnglish.forEach(name => {
-        const voice = voices.find(v => v.name === name);
-        if (voice) {
+    voices
+        .filter(v => v.lang.startsWith('en')) // fallback friendly
+        .forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -60,8 +60,7 @@ function populateVoiceDropdown() {
                 selectedVoice = voice;
             }
             voiceSelect.appendChild(option);
-        }
-    });
+        });
 }
 
 function populateGeorgianDropdown() {
@@ -69,9 +68,9 @@ function populateGeorgianDropdown() {
     const geoSelect = document.getElementById('georgianVoiceSelect');
     geoSelect.innerHTML = '';
 
-    allowedVoicesGeorgian.forEach(name => {
-        const voice = voices.find(v => v.name === name);
-        if (voice) {
+    voices
+        .filter(v => v.lang.startsWith('ka') || v.lang.includes('en')) // Fallback English if no ka-GE
+        .forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -80,21 +79,31 @@ function populateGeorgianDropdown() {
                 selectedGeorgianVoice = voice;
             }
             geoSelect.appendChild(option);
-        }
-    });
+        });
 }
+
 
 function loadVoices() {
     const voices = speechSynthesis.getVoices();
+
     populateVoiceDropdown();
     populateGeorgianDropdown();
 
+    // Set English voice
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
     selectedVoice = voices.find(v => v.name === storedVoice);
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
 
+    // Set Georgian voice
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
     selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
+    if (!selectedGeorgianVoice) {
+        selectedGeorgianVoice = voices.find(v => v.lang.startsWith('ka')) || voices[0];
+    }
 }
+
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
