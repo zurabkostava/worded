@@ -1010,9 +1010,11 @@ function renderTagLibrary() {
             const newVal = input.value.trim();
             if (!newVal || newVal === tag) return;
 
+            // 🔁 ჩაანაცვლე `allTags`
             allTags.delete(tag);
             allTags.add(newVal);
 
+            // 🔁 განაახლე ყველა ბარათი
             document.querySelectorAll('.card').forEach(card => {
                 card.querySelectorAll('.tags span').forEach(span => {
                     if (span.textContent === `#${tag}`) span.textContent = `#${newVal}`;
@@ -1024,12 +1026,16 @@ function renderTagLibrary() {
         };
 
         deleteBtn.onclick = () => {
+            // ✅ წავშალოთ მხოლოდ ბიბლიოთეკიდან
             allTags.delete(tag);
+
+            // ✅ ბარათებიდან კი უბრალოდ მოვაშოროთ ვიზუალურად
             document.querySelectorAll('.card').forEach(card => {
                 card.querySelectorAll('.tags span').forEach(span => {
                     if (span.textContent === `#${tag}`) span.remove();
                 });
             });
+
             saveToStorage();
             renderTagLibrary();
         };
@@ -1040,6 +1046,7 @@ function renderTagLibrary() {
         tagListContainer.appendChild(li);
     });
 }
+
 
 document.getElementById('addNewTagBtn').onclick = () => {
     const val = document.getElementById('newTagInput').value.trim();
