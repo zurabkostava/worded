@@ -75,6 +75,30 @@ function populateVoiceDropdown() {
     }
 }
 
+function loadVoicesWithRetry(retries = 10, interval = 300) {
+    let attempts = 0;
+
+    function tryLoad() {
+        const voices = speechSynthesis.getVoices();
+        if (voices.length) {
+            populateVoiceDropdown();       // English
+            populateGeorgianDropdown();   // Georgian
+            return;
+        }
+
+        attempts++;
+        if (attempts < retries) {
+            setTimeout(tryLoad, interval);
+        } else {
+            console.warn("⚠️ ხმების ჩატვირთვა ვერ მოხერხდა Android-ზე.");
+        }
+    }
+
+    tryLoad();
+}
+
+
+
 
 function populateGeorgianDropdown() {
     const voices = speechSynthesis.getVoices();
