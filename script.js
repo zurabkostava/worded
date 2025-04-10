@@ -1,4 +1,4 @@
-
+//script.js
 // ==== აქ შეგროვებულია ყველა DOM ელემენტი ====
 const addCardBtn = document.getElementById('addCardBtn');
 const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
@@ -44,7 +44,6 @@ const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const voiceSelect = document.getElementById('voiceSelect');
 const saveVoiceBtn = document.getElementById('saveVoiceBtn');
 
-const VOICE_STORAGE_KEY = 'selected_voice_name';
 
 const prevBtn = document.querySelector('.player .fa-backward-step').closest('button');
 const nextBtn = document.querySelector('.player .fa-forward-step').closest('button');
@@ -211,16 +210,10 @@ function getVisibleCards() {
 
 
 
-const ENGLISH_RATE_KEY = 'english_voice_rate';
-const GEORGIAN_RATE_KEY = 'georgian_voice_rate';
+
 const englishRateSlider = document.getElementById('englishRateSlider');
 const georgianRateSlider = document.getElementById('georgianRateSlider');
 
-// 🧠 Load sliders from localStorage
-function loadSpeechRates() {
-    englishRateSlider.value = localStorage.getItem(ENGLISH_RATE_KEY) || 1;
-    georgianRateSlider.value = localStorage.getItem(GEORGIAN_RATE_KEY) || 1;
-}
 
 
 
@@ -349,9 +342,6 @@ settingsBtn.onclick = () => {
 closeSettingsBtn.onclick = () => {
     settingsModal.style.display = 'none';
 };
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 // 💾 Save slider values
 saveVoiceBtn.onclick = () => {
@@ -371,52 +361,9 @@ saveVoiceBtn.onclick = () => {
 };
 
 
-const allowedVoicesEnglish = [
-    "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
-    "Microsoft AvaMultilingual Online (Natural) - English (United States)",
-    "Microsoft BrianMultilingual Online (Natural) - English (United States)",
-    "Microsoft EmmaMultilingual Online (Natural) - English (United States)",
-    "Microsoft Libby Online (Natural) - English (United Kingdom)",
-    "Microsoft Maisie Online (Natural) - English (United Kingdom)",
-    "Microsoft Ryan Online (Natural) - English (United Kingdom)",
-    "Microsoft Sonia Online (Natural) - English (United Kingdom)",
-    "Microsoft Thomas Online (Natural) - English (United Kingdom)",
-    "Microsoft Ana Online (Natural) - English (United States)"
-];
-
-const allowedVoicesGeorgian = [
-    "Microsoft Giorgi Online (Natural) - Georgian (Georgia)",
-    "Microsoft Eka Online (Natural) - Georgian (Georgia)",
-    "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
-    "Microsoft AvaMultilingual Online (Natural) - English (United States)",
-    "Microsoft BrianMultilingual Online (Natural) - English (United States)",
-    "Microsoft EmmaMultilingual Online (Natural) - English (United States)"
-];
 
 
 
-
-function populateVoiceDropdown() {
-    const voices = speechSynthesis.getVoices();
-    voiceSelect.innerHTML = '';
-
-    allowedVoicesEnglish.forEach(name => {
-        const voice = voices.find(v => v.name === name);
-        if (voice) {
-            if (!voice) return; // skip if voice not found
-
-            const option = document.createElement('option');
-            option.value = voice.name;
-            option.textContent = voice.name;
-            if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
-                option.selected = true;
-                selectedVoice = voice;
-            }
-            voiceSelect.appendChild(option);
-        }
-    });
-
-}
 
 
 const TEXTAREA_STORAGE_KEY = 'sentence_textareas_data';
@@ -733,6 +680,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
+
+    function preloadAndroidVoices() {
+        const voices = speechSynthesis.getVoices();
+        if (voices.length) return; // უკვე ჩაიტვირთა
+
+        // Dummy utterance რომელიც არ ისმის
+        const dummy = new SpeechSynthesisUtterance(' ');
+        dummy.volume = 0;
+        dummy.rate = 1;
+        dummy.pitch = 1;
+        dummy.lang = 'en-US';
+
+        // როცა დასრულდება — თავიდან ვცადოთ ხმების ჩატვირთვა
+        dummy.onend = () => {
+            setTimeout(() => {
+                loadVoices();
+                populateVoiceDropdown();
+                populateGeorgianDropdown();
+            }, 200);
+        };
+
+        speechSynthesis.speak(dummy);
+    }
+    if (speechSynthesis.getVoices().length === 0) {
+        alert("⚠ ხმები ჯერ არ არის ჩატვირთული. სცადე ხელახლა ან დააჭირე 'Play' ღილაკს თავიდან.");
+    }
+
+    loadVoicesWithDelay();
+    preloadAndroidVoices(); // ← ეს დამატებული
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
@@ -810,11 +786,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    ensureVoicesLoaded(() => {
-        loadVoices();
-        populateVoiceDropdown();
-        populateGeorgianDropdown();
-    });
 
 
     document.addEventListener('click', e => {
@@ -1113,22 +1084,6 @@ function filterCardsByTags() {
 
 
 
-const GEORGIAN_VOICE_KEY = 'selected_georgian_voice';
-let selectedGeorgianVoice = null;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 // ==== ძიება ====
@@ -1372,142 +1327,88 @@ document.getElementById('closeTagLibraryXBtn').onclick = () => {
     tagLibraryModal.style.display = 'none';
 };
 
-let lastSpokenButton = null;
 // თუ autoplay აქტიურია და ეს მოდალიდან მოდის — მოუმატე პროგრესი
 if (isPlaying && highlightEl) {
     const card = document.querySelector('.card.playing');
     if (card) updateCardProgress(card, 0.3);
 }
 
-function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null, callback = null) {
+async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
     if (!window.speechSynthesis || !voiceObj) return;
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = voiceObj;
-    utterance.lang = voiceObj.lang;
-
-    const rate = (voiceObj.lang === 'ka-GE')
-        ? parseFloat(localStorage.getItem('georgian_voice_rate') || 1)
-        : parseFloat(localStorage.getItem('english_voice_rate') || 1);
-    utterance.rate = rate;
-
-    utterance.onstart = () => {
-        if (highlightEl) highlightEl.classList.add('highlighted-sentence');
-        if (buttonEl) buttonEl.classList.add('active');
-    };
-
-    utterance.onend = () => {
-        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+    // 🚫 თუ იმავე ღილაკზე მეორედ დააჭირეს — გავაუქმოთ და მოვაცილოთ highlight-ები
+    if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
+        speechSynthesis.cancel();
         if (buttonEl) buttonEl.classList.remove('active');
-        if (callback) callback();
-    };
+        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+        lastSpokenButton = null;
 
-    window.speechSynthesis.speak(utterance);
-
-    if (extraText) {
-        utterance.onend = () => {
-            const extraUtterance = new SpeechSynthesisUtterance(extraText);
-            extraUtterance.voice = voiceObj;
-            extraUtterance.lang = voiceObj.lang;
-            extraUtterance.rate = rate;
-
-            extraUtterance.onend = () => {
-                if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-                if (buttonEl) buttonEl.classList.remove('active');
-                if (callback) callback();
-            };
-
-            window.speechSynthesis.speak(extraUtterance);
-        };
-    }
-}
-
-
-
-function ensureVoicesLoaded(callback) {
-    const voices = speechSynthesis.getVoices();
-    if (voices.length) {
-        callback();
-    } else {
-        // Try again after short delay
-        setTimeout(() => ensureVoicesLoaded(callback), 200);
-    }
-}
-
-
-let selectedVoice = null;
-
-function loadVoices() {
-    const voices = speechSynthesis.getVoices();
-    populateVoiceDropdown();
-    populateGeorgianDropdown();
-    // ინგლისური ხმა
-    const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-    selectedVoice = voices.find(v => v.name === storedVoice) ||
-        voices.find(v => v.name.includes('Maisie') && v.lang === 'en-GB');
-
-    // ქართული ხმა
-    const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) ||
-        voices.find(v => v.name.includes('Eka') || v.name.includes('Giorgi'));
-
-    // ასევე ავტომატურად შევსდეს dropdown-ები, როცა ხმები იტვირთება
-    populateVoiceDropdown(); // ინგლისური
-    populateGeorgianDropdown(); // ქართული
-}
-
-function loadVoicesWithDelay(retry = 0) {
-    const voices = speechSynthesis.getVoices();
-
-    if (voices.length > 0 || retry >= 10) {
-        loadVoices(); // ← შენი არსებული ფუნქცია
         return;
     }
 
-    setTimeout(() => {
-        loadVoicesWithDelay(retry + 1);
-    }, 200);
+    lastSpokenButton = buttonEl;
+
+    const speak = (txt, el) => {
+        return new Promise(resolve => {
+            const utterance = new SpeechSynthesisUtterance(txt);
+            utterance.voice = voiceObj;
+            utterance.lang = voiceObj.lang;
+
+            const rate = (voiceObj.lang === 'ka-GE')
+                ? parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || 1)
+                : parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || 1);
+
+            utterance.rate = rate;
+
+            if (buttonEl) buttonEl.classList.add('active');
+            if (el) el.classList.add('highlighted-sentence');
+
+            utterance.onend = () => {
+                if (buttonEl) buttonEl.classList.remove('active');
+                if (el) el.classList.remove('highlighted-sentence');
+                lastSpokenButton = null;
+                resolve();
+            };
+
+            speechSynthesis.speak(utterance);
+        });
+    };
+
+    speechSynthesis.cancel();
+    await delay(100);
+
+    if (highlightEl) {
+        highlightEl.classList.add('highlighted-sentence');
+    }
+
+    if (highlightEl) {
+        highlightEl.classList.add('highlighted-sentence');
+    }
+
+    await speak(text); // ⛔️ აღარ ვუწვდით highlightEl
+
+    if (extraText) {
+        await delay(50);
+        await speak(extraText); // ⛔️ აქაც არ ვუწვდით highlightEl
+    }
+
+    if (highlightEl) {
+        highlightEl.classList.remove('highlighted-sentence');
+    }
+
+
+    if (buttonEl) {
+        buttonEl.classList.remove('active');
+    }
+
+    lastSpokenButton = null;
 }
 
 
-function populateGeorgianDropdown() {
-    const voices = speechSynthesis.getVoices();
-    const geoSelect = document.getElementById('georgianVoiceSelect');
-
-    if (!geoSelect) return;
-
-    geoSelect.innerHTML = '<option value="" disabled hidden>აირჩიე ხმა</option>';
-
-    allowedVoicesGeorgian.forEach(name => {
-        const voice = voices.find(v => v.name === name);
-        if (voice) {
-            const option = document.createElement('option');
-            option.value = voice.name;
-            option.textContent = voice.name;
-            if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
-                option.selected = true;
-                selectedGeorgianVoice = voice;
-            }
-            geoSelect.appendChild(option);
-        }
-    });
-}
 
 
 
-speechSynthesis.onvoiceschanged = () => {
-    loadVoices();
-};
 
-
-speechSynthesis.onvoiceschanged = () => {
-    loadVoices();
-};
-
-
-window.speechSynthesis.onvoiceschanged = loadVoices;
-
-let isSpeaking = false;
 
 function speakWord(text, buttonEl) {
     if (!window.speechSynthesis) return;
@@ -1529,7 +1430,7 @@ function speakWord(text, buttonEl) {
         buttonEl.classList.add('active');
     }
 
-    window.speechSynthesis.speak(utterance);
+
 
     // 🔄 ვაკვირდებით როდის დასრულდება საუბარი
     const interval = setInterval(() => {
@@ -1545,24 +1446,6 @@ function speakWord(text, buttonEl) {
 
 
 
-
-
-document.addEventListener('click', (e) => {
-    const speakBtn = e.target.closest('.speak-btn');
-    if (!speakBtn) return;
-
-    e.stopPropagation();
-
-    const text = speakBtn.dataset.text || speakBtn.dataset.word;
-    const extraText = speakBtn.dataset.extra || null;
-    const lang = speakBtn.dataset.lang;
-
-    if (lang === 'ka') {
-        speakWithVoice(text, selectedGeorgianVoice, speakBtn, extraText);
-    } else {
-        speakWithVoice(text, selectedVoice, speakBtn);
-    }
-});
 
 
 
