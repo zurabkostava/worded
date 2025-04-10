@@ -671,8 +671,63 @@ closeSidebarBtn.onclick = () => {
     sidebar.classList.remove('active');
 };
 
+function populateVoiceDropdown() {
+    const voices = speechSynthesis.getVoices();
+    const voiceSelect = document.getElementById('voiceSelect');
+    voiceSelect.innerHTML = '';
 
+    const englishVoices = voices.filter(v => v.lang.startsWith('en'));
 
+    englishVoices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+
+        if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
+            option.selected = true;
+            selectedVoice = voice;
+        }
+
+        voiceSelect.appendChild(option);
+    });
+}
+
+function populateGeorgianDropdown() {
+    const voices = speechSynthesis.getVoices();
+    const geoSelect = document.getElementById('georgianVoiceSelect');
+    geoSelect.innerHTML = '';
+
+    const georgianVoices = voices.filter(v => v.lang === 'ka-GE');
+
+    georgianVoices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+
+        if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
+            option.selected = true;
+            selectedGeorgianVoice = voice;
+        }
+
+        geoSelect.appendChild(option);
+    });
+}
+
+function loadVoices() {
+    populateVoiceDropdown();
+    populateGeorgianDropdown();
+
+    const voices = speechSynthesis.getVoices();
+    const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
+    selectedVoice = voices.find(v => v.name === storedVoice);
+
+    const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
+}
+
+speechSynthesis.onvoiceschanged = loadVoices;
+
+loadVoicesWithDelay();
 
 // ==== გადმოტვირთვა localStorage-დან ====
 document.addEventListener('DOMContentLoaded', () => {
