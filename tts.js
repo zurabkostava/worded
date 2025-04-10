@@ -1,3 +1,5 @@
+// ==== tts.js ====
+
 const VOICE_STORAGE_KEY = 'selected_voice_name';
 const GEORGIAN_VOICE_KEY = 'selected_georgian_voice';
 const ENGLISH_RATE_KEY = 'english_voice_rate';
@@ -5,73 +7,186 @@ const GEORGIAN_RATE_KEY = 'georgian_voice_rate';
 
 let selectedVoice = null;
 let selectedGeorgianVoice = null;
+let lastSpokenButton = null;
 
-function loadVoicesWithRetry(retries = 10) {
+const allowedVoicesEnglish = [
+    "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
+    "Microsoft AvaMultilingual Online (Natural) - English (United States)",
+    "Microsoft BrianMultilingual Online (Natural) - English (United States)",
+    "Microsoft EmmaMultilingual Online (Natural) - English (United States)",
+    "Microsoft Libby Online (Natural) - English (United Kingdom)",
+    "Microsoft Maisie Online (Natural) - English (United Kingdom)",
+    "Microsoft Ryan Online (Natural) - English (United Kingdom)",
+    "Microsoft Sonia Online (Natural) - English (United Kingdom)",
+    "Microsoft Thomas Online (Natural) - English (United Kingdom)",
+    "Microsoft Ana Online (Natural) - English (United States)"
+];
+
+const allowedVoicesGeorgian = [
+    "Microsoft Giorgi Online (Natural) - Georgian (Georgia)",
+    "Microsoft Eka Online (Natural) - Georgian (Georgia)",
+    "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
+    "Microsoft AvaMultilingual Online (Natural) - English (United States)",
+    "Microsoft BrianMultilingual Online (Natural) - English (United States)",
+    "Microsoft EmmaMultilingual Online (Natural) - English (United States)"
+];
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function loadSpeechRates() {
+    const englishRateSlider = document.getElementById('englishRateSlider');
+    const georgianRateSlider = document.getElementById('georgianRateSlider');
+    englishRateSlider.value = localStorage.getItem(ENGLISH_RATE_KEY) || 1;
+    georgianRateSlider.value = localStorage.getItem(GEORGIAN_RATE_KEY) || 1;
+}
+
+function populateVoiceDropdown() {
     const voices = speechSynthesis.getVoices();
-    if (voices.length || retries <= 0) {
-        setVoices(voices);
-    } else {
-        setTimeout(() => loadVoicesWithRetry(retries - 1), 200);
+    const voiceSelect = document.getElementById('voiceSelect');
+    voiceSelect.innerHTML = '';
+
+    voices.forEach(voice => {
+        if (allowedVoicesEnglish.includes(voice.name) || voice.lang.startsWith('en')) {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            option.textContent = voice.name;
+            if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
+                option.selected = true;
+                selectedVoice = voice;
+            }
+            voiceSelect.appendChild(option);
+        }
+    });
+
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+        if (selectedVoice) {
+            localStorage.setItem(VOICE_STORAGE_KEY, selectedVoice.name);
+        }
     }
 }
 
-function setVoices(voices) {
-    const stored = localStorage.getItem(VOICE_STORAGE_KEY);
-    selectedVoice = voices.find(v => v.name === stored) || voices.find(v => v.lang.startsWith('en'));
+function populateGeorgianDropdown() {
+    const voices = speechSynthesis.getVoices();
+    const geoSelect = document.getElementById('georgianVoiceSelect');
+    geoSelect.innerHTML = '';
+
+    voices.forEach(voice => {
+        if (allowedVoicesGeorgian.includes(voice.name) || voice.lang === 'ka-GE') {
+            const option = document.createElement('option');
+            option.value = voice.name;
+            option.textContent = voice.name;
+            if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
+                option.selected = true;
+                selectedGeorgianVoice = voice;
+            }
+            geoSelect.appendChild(option);
+        }
+    });
+
+    if (!selectedGeorgianVoice) {
+        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || voices[0];
+        if (selectedGeorgianVoice) {
+            localStorage.setItem(GEORGIAN_VOICE_KEY, selectedGeorgianVoice.name);
+        }
+    }
+}
+
+function loadVoices() {
+    populateVoiceDropdown();
+    populateGeorgianDropdown();
+
+    const voices = speechSynthesis.getVoices();
+    const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
+    selectedVoice = voices.find(v => v.name === storedVoice) || selectedVoice;
 
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || voices.find(v => v.lang === 'ka-GE');
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || selectedGeorgianVoice;
 }
 
-function speak(text, lang = 'en', extra = null, rate = 1, voice = null) {
-    if (!window.speechSynthesis || !text) return;
+function loadVoicesWithDelay(retry = 0) {
+    const voices = speechSynthesis.getVoices();
+    if (voices.length > 0 || retry >= 10) {
+        loadVoices();
+        return;
+    }
+    setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
+}
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang;
-    utterance.rate = rate;
+speechSynthesis.onvoiceschanged = loadVoices;
 
-    if (voice) {
-        utterance.voice = voice;
-        utterance.lang = voice.lang;
+function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
+    if (!window.speechSynthesis) return;
+
+    if (!voiceObj) {
+        const voices = speechSynthesis.getVoices();
+        voiceObj = voices.find(v => v.lang === 'ka-GE') ||
+            voices.find(v => v.lang.startsWith('en')) ||
+            voices[0];
     }
 
-    speechSynthesis.cancel();
-    setTimeout(() => {
+    if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+        if (buttonEl) buttonEl.classList.remove('active');
+        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+        lastSpokenButton = null;
+        return;
+    }
+
+    lastSpokenButton = buttonEl;
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = voiceObj;
+    utterance.lang = voiceObj.lang;
+
+    const rate = (voiceObj.lang === 'ka-GE')
+        ? parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || 1)
+        : parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || 1);
+
+    utterance.rate = rate;
+
+    if (buttonEl) buttonEl.classList.add('active');
+    if (highlightEl) highlightEl.classList.add('highlighted-sentence');
+
+    utterance.onend = () => {
+        if (buttonEl) buttonEl.classList.remove('active');
+        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+        lastSpokenButton = null;
+    };
+
+    speechSynthesis.cancel(); // Cancel before speaking
+    delay(100).then(() => {
         speechSynthesis.speak(utterance);
-        if (extra) {
-            utterance.onend = () => {
-                const extraUtterance = new SpeechSynthesisUtterance(extra);
-                extraUtterance.lang = lang;
-                extraUtterance.rate = rate;
-                if (voice) {
-                    extraUtterance.voice = voice;
-                    extraUtterance.lang = voice.lang;
-                }
-                speechSynthesis.speak(extraUtterance);
-            };
+        if (extraText) {
+            const extraUtter = new SpeechSynthesisUtterance(extraText);
+            extraUtter.voice = voiceObj;
+            extraUtter.lang = voiceObj.lang;
+            extraUtter.rate = rate;
+            speechSynthesis.speak(extraUtter);
         }
-    }, 150);
+    });
 }
 
 document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.speak-btn');
-    if (!btn) return;
+    const speakBtn = e.target.closest('.speak-btn');
+    if (!speakBtn) return;
 
-    const text = btn.dataset.text || btn.dataset.word;
-    const extra = btn.dataset.extra || null;
-    const lang = btn.dataset.lang || 'en';
+    e.stopPropagation();
+
+    const text = speakBtn.dataset.text || speakBtn.dataset.word;
+    const extraText = speakBtn.dataset.extra || null;
+    const lang = speakBtn.dataset.lang;
 
     if (lang === 'ka') {
-        const rate = parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || '1');
-        speak(text, 'ka-GE', extra, rate, selectedGeorgianVoice);
+        speakWithVoice(text, selectedGeorgianVoice, speakBtn, extraText);
     } else {
-        const rate = parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || '1');
-        speak(text, 'en-US', extra, rate, selectedVoice);
+        speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
 
-// ხმების ჩატვირთვა
-if (speechSynthesis.onvoiceschanged !== undefined) {
-    speechSynthesis.onvoiceschanged = () => loadVoicesWithRetry();
-}
-loadVoicesWithRetry();
+window.addEventListener('load', () => {
+    loadSpeechRates();
+    loadVoicesWithDelay();
+});
