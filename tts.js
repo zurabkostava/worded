@@ -49,8 +49,6 @@ function populateVoiceDropdown() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
 
-    let fallbackSet = false;
-
     allowedVoicesEnglish.forEach(name => {
         const voice = voices.find(v => v.name === name);
         if (voice) {
@@ -60,29 +58,16 @@ function populateVoiceDropdown() {
             if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
                 option.selected = true;
                 selectedVoice = voice;
-                fallbackSet = true;
             }
             voiceSelect.appendChild(option);
         }
     });
-
-    if (!selectedVoice && voices.length > 0 && !fallbackSet) {
-        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-        localStorage.setItem(VOICE_STORAGE_KEY, selectedVoice.name);
-        const fallbackOption = document.createElement('option');
-        fallbackOption.value = selectedVoice.name;
-        fallbackOption.textContent = `[Default] ${selectedVoice.name}`;
-        fallbackOption.selected = true;
-        voiceSelect.appendChild(fallbackOption);
-    }
 }
 
 function populateGeorgianDropdown() {
     const voices = speechSynthesis.getVoices();
     const geoSelect = document.getElementById('georgianVoiceSelect');
     geoSelect.innerHTML = '';
-
-    let fallbackSet = false;
 
     allowedVoicesGeorgian.forEach(name => {
         const voice = voices.find(v => v.name === name);
@@ -93,21 +78,10 @@ function populateGeorgianDropdown() {
             if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
                 option.selected = true;
                 selectedGeorgianVoice = voice;
-                fallbackSet = true;
             }
             geoSelect.appendChild(option);
         }
     });
-
-    if (!selectedGeorgianVoice && voices.length > 0 && !fallbackSet) {
-        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
-        localStorage.setItem(GEORGIAN_VOICE_KEY, selectedGeorgianVoice.name);
-        const fallbackOption = document.createElement('option');
-        fallbackOption.value = selectedGeorgianVoice.name;
-        fallbackOption.textContent = `[Default] ${selectedGeorgianVoice.name}`;
-        fallbackOption.selected = true;
-        geoSelect.appendChild(fallbackOption);
-    }
 }
 
 function loadVoices() {
@@ -116,19 +90,22 @@ function loadVoices() {
     populateGeorgianDropdown();
 
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-    selectedVoice = voices.find(v => v.name === storedVoice) || selectedVoice;
+    selectedVoice = voices.find(v => v.name === storedVoice);
 
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || selectedGeorgianVoice;
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
 }
 
-window.addEventListener('load', () => {
-    loadSpeechRates();
-    loadVoicesWithForce();
-});
+function loadVoicesWithDelay(retry = 0) {
+    const voices = speechSynthesis.getVoices();
+    if (voices.length > 0 || retry >= 10) {
+        loadVoices();
+        return;
+    }
+    setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
+}
 
-
-speechSynthesis.onvoiceschanged = loadVoicesWithDelay;
+speechSynthesis.onvoiceschanged = loadVoices;
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
     if (!window.speechSynthesis || !voiceObj) return;
@@ -199,29 +176,19 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
-// Try to "wake up" voices
-window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-setTimeout(() => {
+function triggerAndroidVoiceEngine() {
     const voices = speechSynthesis.getVoices();
-    console.log(voices); // Debug: do voices appear?
-}, 500);
-function loadVoicesWithForce(retry = 0) {
-    const voices = speechSynthesis.getVoices();
+    if (voices.length > 0) return; // უკვე მზადაა
 
-    if (voices.length > 0 || retry >= 10) {
-        loadVoices();
-        return;
-    }
-
-    // Try to wake voices manually
-    const dummy = new SpeechSynthesisUtterance('');
-    speechSynthesis.speak(dummy);
-
-    setTimeout(() => loadVoicesWithForce(retry + 1), 300);
+    const utterance = new SpeechSynthesisUtterance(' ');
+    utterance.volume = 0;
+    utterance.rate = 0.1;
+    utterance.pitch = 0.1;
+    speechSynthesis.speak(utterance);
 }
 
-
-console.log('Voices Loaded:', speechSynthesis.getVoices());
-if (voices.length === 0) {
-    alert("⚠ ხმოვანი მოდელები ვერ მოიძებნა. სცადე ბრაუზერის Read Aloud, ან გამოიყენე Edge Android-ში.");
-}
+window.addEventListener('load', () => {
+    loadSpeechRates();
+    loadVoicesWithDelay();
+    triggerAndroidVoiceEngine(); // 🎯 ეს არის ეგ "read aloud"-ის ჩართვის სიმულაცია
+});
