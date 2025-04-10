@@ -397,14 +397,14 @@ const allowedVoicesGeorgian = [
 
 
 function populateVoiceDropdown() {
-    if (!voiceSelect) return;
-    const voices = speechSynthesis.getVoices() || [];
-
-    voiceSelect.innerHTML = '<option value="" disabled hidden>აირჩიე ხმა</option>';
+    const voices = speechSynthesis.getVoices();
+    voiceSelect.innerHTML = '';
 
     allowedVoicesEnglish.forEach(name => {
         const voice = voices.find(v => v.name === name);
         if (voice) {
+            if (!voice) return; // skip if voice not found
+
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -415,8 +415,8 @@ function populateVoiceDropdown() {
             voiceSelect.appendChild(option);
         }
     });
-}
 
+}
 
 
 const TEXTAREA_STORAGE_KEY = 'sentence_textareas_data';
@@ -781,8 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         }
     });
-    loadVoices(); // იპოვოს შენახული ხმები
-    setTimeout(() => speechSynthesis.getVoices(), 100); // Edge-ზე trigger
+
 
 
     function speakWord(text) {
@@ -810,8 +809,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 150); // მცირე დაყოვნება (~150ms) რომ თავიდან აირიდო ორმაგი ხმა
     }
 
-    loadVoices();
 
+    ensureVoicesLoaded(() => {
+        loadVoices();
+        populateVoiceDropdown();
+        populateGeorgianDropdown();
+    });
 
 
     document.addEventListener('click', e => {
@@ -1376,106 +1379,81 @@ if (isPlaying && highlightEl) {
     if (card) updateCardProgress(card, 0.3);
 }
 
-async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
+function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null, callback = null) {
     if (!window.speechSynthesis || !voiceObj) return;
 
-    // 🚫 თუ იმავე ღილაკზე მეორედ დააჭირეს — გავაუქმოთ და მოვაცილოთ highlight-ები
-    if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
-        speechSynthesis.cancel();
-        if (buttonEl) buttonEl.classList.remove('active');
-        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-        lastSpokenButton = null;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = voiceObj;
+    utterance.lang = voiceObj.lang;
 
-        return;
-    }
+    const rate = (voiceObj.lang === 'ka-GE')
+        ? parseFloat(localStorage.getItem('georgian_voice_rate') || 1)
+        : parseFloat(localStorage.getItem('english_voice_rate') || 1);
+    utterance.rate = rate;
 
-    lastSpokenButton = buttonEl;
-
-    const speak = (txt, el) => {
-        return new Promise(resolve => {
-            const utterance = new SpeechSynthesisUtterance(txt);
-            utterance.voice = voiceObj;
-            utterance.lang = voiceObj.lang;
-
-            const rate = (voiceObj.lang === 'ka-GE')
-                ? parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || 1)
-                : parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || 1);
-
-            utterance.rate = rate;
-
-            if (buttonEl) buttonEl.classList.add('active');
-            if (el) el.classList.add('highlighted-sentence');
-
-            utterance.onend = () => {
-                if (buttonEl) buttonEl.classList.remove('active');
-                if (el) el.classList.remove('highlighted-sentence');
-                lastSpokenButton = null;
-                resolve();
-            };
-
-            speechSynthesis.speak(utterance);
-        });
+    utterance.onstart = () => {
+        if (highlightEl) highlightEl.classList.add('highlighted-sentence');
+        if (buttonEl) buttonEl.classList.add('active');
     };
 
-    speechSynthesis.cancel();
-    await delay(100);
+    utterance.onend = () => {
+        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+        if (buttonEl) buttonEl.classList.remove('active');
+        if (callback) callback();
+    };
 
-    if (highlightEl) {
-        highlightEl.classList.add('highlighted-sentence');
-    }
-
-    if (highlightEl) {
-        highlightEl.classList.add('highlighted-sentence');
-    }
-
-    await speak(text); // ⛔️ აღარ ვუწვდით highlightEl
+    window.speechSynthesis.speak(utterance);
 
     if (extraText) {
-        await delay(50);
-        await speak(extraText); // ⛔️ აქაც არ ვუწვდით highlightEl
+        utterance.onend = () => {
+            const extraUtterance = new SpeechSynthesisUtterance(extraText);
+            extraUtterance.voice = voiceObj;
+            extraUtterance.lang = voiceObj.lang;
+            extraUtterance.rate = rate;
+
+            extraUtterance.onend = () => {
+                if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+                if (buttonEl) buttonEl.classList.remove('active');
+                if (callback) callback();
+            };
+
+            window.speechSynthesis.speak(extraUtterance);
+        };
     }
-
-    if (highlightEl) {
-        highlightEl.classList.remove('highlighted-sentence');
-    }
-
-
-    if (buttonEl) {
-        buttonEl.classList.remove('active');
-    }
-
-    lastSpokenButton = null;
 }
 
 
 
-let voices = [];
+function ensureVoicesLoaded(callback) {
+    const voices = speechSynthesis.getVoices();
+    if (voices.length) {
+        callback();
+    } else {
+        // Try again after short delay
+        setTimeout(() => ensureVoicesLoaded(callback), 200);
+    }
+}
 
 
 let selectedVoice = null;
 
 function loadVoices() {
-    voices = speechSynthesis.getVoices();
-
-    if (!voices.length) {
-        speechSynthesis.onvoiceschanged = () => {
-            voices = speechSynthesis.getVoices();
-            populateVoiceDropdown();
-            populateGeorgianDropdown();
-            setDefaultVoices();
-        };
-    } else {
-        populateVoiceDropdown();
-        populateGeorgianDropdown();
-        setDefaultVoices();
-    }
-}
-function setDefaultVoices() {
+    const voices = speechSynthesis.getVoices();
+    populateVoiceDropdown();
+    populateGeorgianDropdown();
+    // ინგლისური ხმა
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-    const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
+    selectedVoice = voices.find(v => v.name === storedVoice) ||
+        voices.find(v => v.name.includes('Maisie') && v.lang === 'en-GB');
 
-    selectedVoice = voices.find(v => v.name === storedVoice) || voices.find(v => v.name.includes('Maisie') && v.lang === 'en-GB');
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || voices.find(v => v.name.includes('Eka'));
+    // ქართული ხმა
+    const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) ||
+        voices.find(v => v.name.includes('Eka') || v.name.includes('Giorgi'));
+
+    // ასევე ავტომატურად შევსდეს dropdown-ები, როცა ხმები იტვირთება
+    populateVoiceDropdown(); // ინგლისური
+    populateGeorgianDropdown(); // ქართული
 }
 
 function loadVoicesWithDelay(retry = 0) {
@@ -1493,8 +1471,9 @@ function loadVoicesWithDelay(retry = 0) {
 
 
 function populateGeorgianDropdown() {
-    const voices = speechSynthesis.getVoices() || [];
+    const voices = speechSynthesis.getVoices();
     const geoSelect = document.getElementById('georgianVoiceSelect');
+
     if (!geoSelect) return;
 
     geoSelect.innerHTML = '<option value="" disabled hidden>აირჩიე ხმა</option>';
@@ -1516,7 +1495,6 @@ function populateGeorgianDropdown() {
 
 
 
-
 speechSynthesis.onvoiceschanged = () => {
     loadVoices();
 };
@@ -1527,6 +1505,7 @@ speechSynthesis.onvoiceschanged = () => {
 };
 
 
+window.speechSynthesis.onvoiceschanged = loadVoices;
 
 let isSpeaking = false;
 
