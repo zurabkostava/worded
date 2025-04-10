@@ -49,6 +49,8 @@ function populateVoiceDropdown() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
 
+    let fallbackSet = false;
+
     allowedVoicesEnglish.forEach(name => {
         const voice = voices.find(v => v.name === name);
         if (voice) {
@@ -58,16 +60,29 @@ function populateVoiceDropdown() {
             if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
                 option.selected = true;
                 selectedVoice = voice;
+                fallbackSet = true;
             }
             voiceSelect.appendChild(option);
         }
     });
+
+    if (!selectedVoice && voices.length > 0 && !fallbackSet) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+        localStorage.setItem(VOICE_STORAGE_KEY, selectedVoice.name);
+        const fallbackOption = document.createElement('option');
+        fallbackOption.value = selectedVoice.name;
+        fallbackOption.textContent = `[Default] ${selectedVoice.name}`;
+        fallbackOption.selected = true;
+        voiceSelect.appendChild(fallbackOption);
+    }
 }
 
 function populateGeorgianDropdown() {
     const voices = speechSynthesis.getVoices();
     const geoSelect = document.getElementById('georgianVoiceSelect');
     geoSelect.innerHTML = '';
+
+    let fallbackSet = false;
 
     allowedVoicesGeorgian.forEach(name => {
         const voice = voices.find(v => v.name === name);
@@ -78,10 +93,21 @@ function populateGeorgianDropdown() {
             if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
                 option.selected = true;
                 selectedGeorgianVoice = voice;
+                fallbackSet = true;
             }
             geoSelect.appendChild(option);
         }
     });
+
+    if (!selectedGeorgianVoice && voices.length > 0 && !fallbackSet) {
+        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
+        localStorage.setItem(GEORGIAN_VOICE_KEY, selectedGeorgianVoice.name);
+        const fallbackOption = document.createElement('option');
+        fallbackOption.value = selectedGeorgianVoice.name;
+        fallbackOption.textContent = `[Default] ${selectedGeorgianVoice.name}`;
+        fallbackOption.selected = true;
+        geoSelect.appendChild(fallbackOption);
+    }
 }
 
 function loadVoices() {
@@ -90,66 +116,25 @@ function loadVoices() {
     populateGeorgianDropdown();
 
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-    selectedVoice = voices.find(v => v.name === storedVoice);
+    selectedVoice = voices.find(v => v.name === storedVoice) || selectedVoice;
 
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || selectedGeorgianVoice;
 }
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
-
     if (voices.length > 0 || retry >= 10) {
-        if (voices.length === 0 && isAndroidEdge()) {
-            console.warn("Edge on Android: fallback to default system voice.");
-            selectedVoice = null;
-            selectedGeorgianVoice = null;
-
-            const voiceSelect = document.getElementById('voiceSelect');
-            const geoSelect = document.getElementById('georgianVoiceSelect');
-
-            if (voiceSelect) {
-                voiceSelect.innerHTML = '<option selected>Default system voice</option>';
-            }
-            if (geoSelect) {
-                geoSelect.innerHTML = '<option selected>Default system voice</option>';
-            }
-
-        } else {
-            loadVoices(); // Normal behavior
-        }
+        loadVoices();
         return;
     }
-
-    setTimeout(() => loadVoicesWithDelay(retry + 1), 300);
+    setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
 }
 
-
-
-// 🆕 გამოიყენე fallback default ხმები
-function applyFallbackVoices() {
-    const voices = speechSynthesis.getVoices();
-
-    if (!selectedVoice) {
-        selectedVoice = voices.find(v => allowedVoicesEnglish.includes(v.name)) ||
-            voices.find(v => v.lang.startsWith('en'));
-    }
-
-    if (!selectedGeorgianVoice) {
-        selectedGeorgianVoice = voices.find(v => allowedVoicesGeorgian.includes(v.name)) ||
-            voices.find(v => v.name.includes('Eka') || v.name.includes('Giorgi'));
-    }
-}
-
-
-speechSynthesis.onvoiceschanged = loadVoices;
+speechSynthesis.onvoiceschanged = loadVoicesWithDelay;
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis || !voiceObj) {
-        applyFallbackVoices();
-        voiceObj = voiceObj || selectedVoice || selectedGeorgianVoice;
-        if (!voiceObj) return;
-    }
+    if (!window.speechSynthesis || !voiceObj) return;
 
     if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
         speechSynthesis.cancel();
@@ -164,15 +149,6 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
     const speak = (txt, el) => {
         return new Promise(resolve => {
             const utterance = new SpeechSynthesisUtterance(txt);
-
-            // ✅ Fallback for Android Edge
-            if (!voiceObj && isAndroidEdge()) {
-                utterance.rate = 1;
-                speechSynthesis.speak(utterance);
-                resolve();
-                return;
-            }
-
             utterance.voice = voiceObj;
             utterance.lang = voiceObj.lang;
 
@@ -196,14 +172,17 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
         });
     };
 
-
     speechSynthesis.cancel();
     delay(100).then(async () => {
+        if (highlightEl) highlightEl.classList.add('highlighted-sentence');
         await speak(text, highlightEl);
         if (extraText) {
             await delay(50);
             await speak(extraText);
         }
+        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+        if (buttonEl) buttonEl.classList.remove('active');
+        lastSpokenButton = null;
     });
 }
 
@@ -223,7 +202,3 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
-function isAndroidEdge() {
-    const ua = navigator.userAgent;
-    return ua.includes('EdgA') && ua.includes('Android');
-}
