@@ -92,11 +92,20 @@ function loadVoices() {
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
     selectedVoice = voices.find(v => v.name === storedVoice);
 
+    // 📱 fallback for mobile: default English voice
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
+
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
     selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
-    autoFallbackVoice(); // ✅ დამატება
 
+    // 📱 fallback for mobile: default Georgian voice or similar
+    if (!selectedGeorgianVoice) {
+        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
 }
+
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
@@ -110,7 +119,15 @@ function loadVoicesWithDelay(retry = 0) {
 speechSynthesis.onvoiceschanged = loadVoices;
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis || !voiceObj) return;
+    if (!window.speechSynthesis || !text) return;
+
+    if (!voiceObj) {
+        // 📱 fallback ხმა ტელეფონებისთვის
+        const fallbackLang = text.charCodeAt(0) > 128 ? 'ka-GE' : 'en';
+        voiceObj = speechSynthesis.getVoices().find(v => v.lang === fallbackLang)
+            || speechSynthesis.getVoices().find(v => v.lang.startsWith(fallbackLang.slice(0, 2)))
+            || speechSynthesis.getVoices()[0];
+    }
 
     if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
         speechSynthesis.cancel();
@@ -162,6 +179,7 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
     });
 }
 
+
 document.addEventListener('click', (e) => {
     const speakBtn = e.target.closest('.speak-btn');
     if (!speakBtn) return;
@@ -178,12 +196,3 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
-function autoFallbackVoice() {
-    const voices = speechSynthesis.getVoices();
-    if (!selectedVoice && voices.length) {
-        selectedVoice = voices.find(v => v.lang.startsWith("en")) || voices[0];
-    }
-    if (!selectedGeorgianVoice && voices.length) {
-        selectedGeorgianVoice = voices.find(v => v.lang === "ka-GE") || voices.find(v => v.lang.startsWith("ka")) || voices[0];
-    }
-}
