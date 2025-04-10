@@ -94,6 +94,8 @@ function loadVoices() {
 
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
     selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
+    autoFallbackVoice(); // ✅ დამატება
+
 }
 
 function loadVoicesWithDelay(retry = 0) {
@@ -176,3 +178,12 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
+function autoFallbackVoice() {
+    const voices = speechSynthesis.getVoices();
+    if (!selectedVoice && voices.length) {
+        selectedVoice = voices.find(v => v.lang.startsWith("en")) || voices[0];
+    }
+    if (!selectedGeorgianVoice && voices.length) {
+        selectedGeorgianVoice = voices.find(v => v.lang === "ka-GE") || voices.find(v => v.lang.startsWith("ka")) || voices[0];
+    }
+}
