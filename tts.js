@@ -1,4 +1,4 @@
-// ==== tts.js ====
+// ==== MODIFIED tts.js ==== //
 
 const VOICE_STORAGE_KEY = 'selected_voice_name';
 const GEORGIAN_VOICE_KEY = 'selected_georgian_voice';
@@ -25,11 +25,7 @@ const allowedVoicesEnglish = [
 
 const allowedVoicesGeorgian = [
     "Microsoft Giorgi Online (Natural) - Georgian (Georgia)",
-    "Microsoft Eka Online (Natural) - Georgian (Georgia)",
-    "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
-    "Microsoft AvaMultilingual Online (Natural) - English (United States)",
-    "Microsoft BrianMultilingual Online (Natural) - English (United States)",
-    "Microsoft EmmaMultilingual Online (Natural) - English (United States)"
+    "Microsoft Eka Online (Natural) - Georgian (Georgia)"
 ];
 
 function delay(ms) {
@@ -37,10 +33,16 @@ function delay(ms) {
 }
 
 function loadSpeechRates() {
-    const englishRateSlider = document.getElementById('englishRateSlider');
-    const georgianRateSlider = document.getElementById('georgianRateSlider');
-    englishRateSlider.value = localStorage.getItem(ENGLISH_RATE_KEY) || 1;
-    georgianRateSlider.value = localStorage.getItem(GEORGIAN_RATE_KEY) || 1;
+    document.getElementById('englishRateSlider').value = localStorage.getItem(ENGLISH_RATE_KEY) || 1;
+    document.getElementById('georgianRateSlider').value = localStorage.getItem(GEORGIAN_RATE_KEY) || 1;
+}
+
+function findAllowedVoice(voices, allowedList, fallbackLang) {
+    for (const name of allowedList) {
+        const found = voices.find(v => v.name === name);
+        if (found) return found;
+    }
+    return voices.find(v => v.lang && v.lang.startsWith(fallbackLang)) || voices[0];
 }
 
 function populateVoiceDropdown() {
@@ -48,12 +50,8 @@ function populateVoiceDropdown() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
 
-    let hasMatch = false;
     voices.forEach(voice => {
-        if (
-            allowedVoicesEnglish.includes(voice.name) ||
-            voice.lang.startsWith('en')
-        ) {
+        if (voice.lang.startsWith('en')) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -62,14 +60,10 @@ function populateVoiceDropdown() {
                 selectedVoice = voice;
             }
             voiceSelect.appendChild(option);
-            hasMatch = true;
         }
     });
 
-    if (!selectedVoice && voices.length > 0) {
-        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-        localStorage.setItem(VOICE_STORAGE_KEY, selectedVoice.name);
-    }
+    if (!selectedVoice) selectedVoice = findAllowedVoice(voices, allowedVoicesEnglish, 'en');
 }
 
 function populateGeorgianDropdown() {
@@ -77,12 +71,8 @@ function populateGeorgianDropdown() {
     const geoSelect = document.getElementById('georgianVoiceSelect');
     geoSelect.innerHTML = '';
 
-    let hasMatch = false;
     voices.forEach(voice => {
-        if (
-            allowedVoicesGeorgian.includes(voice.name) ||
-            voice.lang === 'ka-GE'
-        ) {
+        if (voice.lang === 'ka-GE' || voice.name.includes('Eka') || voice.name.includes('Giorgi')) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
@@ -91,21 +81,14 @@ function populateGeorgianDropdown() {
                 selectedGeorgianVoice = voice;
             }
             geoSelect.appendChild(option);
-            hasMatch = true;
         }
     });
 
-    if (!selectedGeorgianVoice && voices.length > 0) {
-        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || null;
-        if (selectedGeorgianVoice) {
-            localStorage.setItem(GEORGIAN_VOICE_KEY, selectedGeorgianVoice.name);
-        }
-    }
+    if (!selectedGeorgianVoice) selectedGeorgianVoice = findAllowedVoice(voices, allowedVoicesGeorgian, 'ka');
 }
 
 function loadVoices() {
     const voices = speechSynthesis.getVoices();
-
     populateVoiceDropdown();
     populateGeorgianDropdown();
 
@@ -125,20 +108,15 @@ function loadVoicesWithDelay(retry = 0) {
     setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
 }
 
-speechSynthesis.onvoiceschanged = loadVoices;
+speechSynthesis.onvoiceschanged = loadVoicesWithDelay;
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis) return;
-
-    if (!voiceObj) {
-        const voices = speechSynthesis.getVoices();
-        voiceObj = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
-    }
+    if (!window.speechSynthesis || !voiceObj || !text) return;
 
     if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
         speechSynthesis.cancel();
-        if (buttonEl) buttonEl.classList.remove('active');
-        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+        buttonEl?.classList.remove('active');
+        highlightEl?.classList.remove('highlighted-sentence');
         lastSpokenButton = null;
         return;
     }
@@ -157,12 +135,12 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
 
             utterance.rate = rate;
 
-            if (buttonEl) buttonEl.classList.add('active');
-            if (el) el.classList.add('highlighted-sentence');
+            buttonEl?.classList.add('active');
+            el?.classList.add('highlighted-sentence');
 
             utterance.onend = () => {
-                if (buttonEl) buttonEl.classList.remove('active');
-                if (el) el.classList.remove('highlighted-sentence');
+                buttonEl?.classList.remove('active');
+                el?.classList.remove('highlighted-sentence');
                 lastSpokenButton = null;
                 resolve();
             };
@@ -173,14 +151,14 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
 
     speechSynthesis.cancel();
     delay(100).then(async () => {
-        if (highlightEl) highlightEl.classList.add('highlighted-sentence');
+        highlightEl?.classList.add('highlighted-sentence');
         await speak(text, highlightEl);
         if (extraText) {
             await delay(50);
             await speak(extraText);
         }
-        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-        if (buttonEl) buttonEl.classList.remove('active');
+        highlightEl?.classList.remove('highlighted-sentence');
+        buttonEl?.classList.remove('active');
         lastSpokenButton = null;
     });
 }
@@ -200,17 +178,4 @@ document.addEventListener('click', (e) => {
     } else {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
-});
-
-window.addEventListener('load', () => {
-    loadSpeechRates();
-    loadVoicesWithDelay();
-});
-document.addEventListener('click', () => {
-    if (speechSynthesis.getVoices().length === 0) {
-        speechSynthesis.getVoices(); // Trigger preload on interaction
-    }
-}, { once: true });
-document.getElementById('voiceSelectBtn').addEventListener('click', () => {
-    loadVoicesWithDelay();
 });
