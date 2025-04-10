@@ -1677,7 +1677,7 @@ document.getElementById('prevCardBtn').onclick = () => {
         let randomIndex;
         do {
             randomIndex = Math.floor(Math.random() * cards.length);
-        } while (randomIndex === currentCardIndex);
+        } while (randomIndex === currentCardIndex); // თავიდან არ აირჩიოს იგივე
         currentCardIndex = randomIndex;
     } else {
         if (currentCardIndex > 0) {
@@ -1693,7 +1693,6 @@ document.getElementById('nextCardBtn').onclick = () => {
     const cards = getVisibleCards();
     if (!cards.length) return;
 
-    // თუ shuffle აქტიურია, შემთხვევითი ბარათი
     if (shuffleMode) {
         let randomIndex;
         do {
@@ -1701,7 +1700,6 @@ document.getElementById('nextCardBtn').onclick = () => {
         } while (randomIndex === currentCardIndex);
         currentCardIndex = randomIndex;
     } else {
-        // თუ shuffle არაა — გადადი ჩვეულებრივად მომდევნოზე
         if (currentCardIndex < cards.length - 1) {
             currentCardIndex++;
         }
@@ -1709,6 +1707,7 @@ document.getElementById('nextCardBtn').onclick = () => {
 
     loadCardIntoModal(cards[currentCardIndex]);
 };
+
 
 
 
@@ -1777,20 +1776,32 @@ document.addEventListener('keydown', (e) => {
     const modalVisible = document.getElementById('cardPreviewModal').style.display === 'flex';
     if (!modalVisible) return;
 
+    const cards = getVisibleCards();
+    if (!cards.length) return;
+
+    if (shuffleMode) {
+        let randomIndex;
+        do {
+            randomIndex = Math.floor(Math.random() * cards.length);
+        } while (randomIndex === currentCardIndex);
+        currentCardIndex = randomIndex;
+        loadCardIntoModal(cards[currentCardIndex]);
+        return;
+    }
+
     if (e.key === 'ArrowLeft') {
-        const cards = [...document.querySelectorAll('.card')];
         if (currentCardIndex > 0) {
             currentCardIndex--;
             loadCardIntoModal(cards[currentCardIndex]);
         }
     } else if (e.key === 'ArrowRight') {
-        const cards = [...document.querySelectorAll('.card')];
         if (currentCardIndex < cards.length - 1) {
             currentCardIndex++;
             loadCardIntoModal(cards[currentCardIndex]);
         }
     }
 });
+
 
 
 
@@ -2134,9 +2145,18 @@ function renderTags(container, list, sourceArray, isTranslation) {
 
 function updateNavButtons() {
     const cards = [...document.querySelectorAll('.card')];
-    document.getElementById('prevCardBtn').disabled = currentCardIndex <= 0;
-    document.getElementById('nextCardBtn').disabled = currentCardIndex >= cards.length - 1;
+
+    if (shuffleMode) {
+        // Shuffle რეჟიმში — ღილაკები ყოველთვის აქტიურია
+        document.getElementById('prevCardBtn').disabled = false;
+        document.getElementById('nextCardBtn').disabled = false;
+    } else {
+        // ჩვეულებრივ რეჟიმში ბლოკი კიდეებზე
+        document.getElementById('prevCardBtn').disabled = currentCardIndex <= 0;
+        document.getElementById('nextCardBtn').disabled = currentCardIndex >= cards.length - 1;
+    }
 }
+
 
 
 // ==== Reset Modal ====
