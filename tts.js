@@ -9,14 +9,7 @@ let selectedVoice = null;
 let selectedGeorgianVoice = null;
 let isSpeaking = false;
 let lastSpokenButton = null;
-let voices = [];
-const synth = window.speechSynthesis;
 
-let selectedEnglishVoiceName = localStorage.getItem('selected_voice_name') || '';
-let selectedGeorgianVoiceName = localStorage.getItem('selected_georgian_voice') || '';
-
-const englishRate = parseFloat(localStorage.getItem('english_voice_rate') || '1');
-const georgianRate = parseFloat(localStorage.getItem('georgian_voice_rate') || '1');
 const allowedVoicesEnglish = [
     "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
     "Microsoft AvaMultilingual Online (Natural) - English (United States)",
@@ -92,37 +85,17 @@ function populateGeorgianDropdown() {
 }
 
 function loadVoices() {
-    voices = synth.getVoices();
+    const voices = speechSynthesis.getVoices();
+    populateVoiceDropdown();
+    populateGeorgianDropdown();
 
-    // fallback თუ ვერ იტვირთა ჯერ
-    if (voices.length === 0) {
-        setTimeout(loadVoices, 200);
-        return;
-    }
+    const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
+    selectedVoice = voices.find(v => v.name === storedVoice);
 
-    const englishDropdown = document.getElementById('english-voice');
-    const georgianDropdown = document.getElementById('georgian-voice');
-    const narratorDropdown = document.getElementById('narrator-voice');
-
-    // options ცარიელდება თავიდან
-    [englishDropdown, georgianDropdown, narratorDropdown].forEach(select => {
-        if (!select) return;
-        select.innerHTML = '';
-        voices.forEach(voice => {
-            const opt = document.createElement('option');
-            opt.value = voice.name;
-            opt.textContent = `${voice.name} (${voice.lang})`;
-            select.appendChild(opt);
-        });
-    });
-
-    if (englishDropdown && selectedEnglishVoiceName) englishDropdown.value = selectedEnglishVoiceName;
-    if (georgianDropdown && selectedGeorgianVoiceName) georgianDropdown.value = selectedGeorgianVoiceName;
-    if (narratorDropdown && selectedGeorgianVoiceName) narratorDropdown.value = selectedGeorgianVoiceName;
+    const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
 }
 
-synth.onvoiceschanged = loadVoices;
-loadVoices();
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
     if (voices.length > 0 || retry >= 10) {
