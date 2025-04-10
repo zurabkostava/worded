@@ -27,28 +27,7 @@
     </script>
     <script src="tts.js"></script>
 
-    <style>
-        /* Microsoft Edge Read Aloud Hack */
-        body * {
-            -ms-high-contrast-adjust: none !important;
-            speak: always !important;
-        }
-    </style>
-    <script>
-        // ეს ეხმარება Edge-ს დაინახოს ტექსტი
-        window.addEventListener('load', () => {
-            document.body.setAttribute('aria-hidden', 'false');
-            document.body.removeAttribute('aria-hidden');
 
-            // ყველა ტექსტური ელემენტის საშუალება რომ ჰქონდეს რიდინგს
-            document.querySelectorAll('*').forEach(el => {
-                if (el.innerText) {
-                    el.setAttribute('aria-label', el.innerText.trim());
-                    el.removeAttribute('aria-hidden');
-                }
-            });
-        });
-    </script>
 
     <!-- შენიშნე, რომ ორი ახალი ფუნქცია დაგვჭირდება:
             getDocs, doc, setDoc, deleteDoc -->
@@ -817,5 +796,11 @@
         </div>
     </div>
 </div>
+
+
+<article id="readAloudProxy" style="position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden;">
+    <p id="readAloudText">Welcome to your learning app!</p>
+</article>
+
 </body>
 </html>
