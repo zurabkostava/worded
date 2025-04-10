@@ -105,10 +105,31 @@ function loadVoicesWithDelay(retry = 0) {
     setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
 }
 
+
+// 🆕 გამოიყენე fallback default ხმები
+function applyFallbackVoices() {
+    const voices = speechSynthesis.getVoices();
+
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => allowedVoicesEnglish.includes(v.name)) ||
+            voices.find(v => v.lang.startsWith('en'));
+    }
+
+    if (!selectedGeorgianVoice) {
+        selectedGeorgianVoice = voices.find(v => allowedVoicesGeorgian.includes(v.name)) ||
+            voices.find(v => v.name.includes('Eka') || v.name.includes('Giorgi'));
+    }
+}
+
+
 speechSynthesis.onvoiceschanged = loadVoices;
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis || !voiceObj) return;
+    if (!window.speechSynthesis || !voiceObj) {
+        applyFallbackVoices();
+        voiceObj = voiceObj || selectedVoice || selectedGeorgianVoice;
+        if (!voiceObj) return;
+    }
 
     if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
         speechSynthesis.cancel();
@@ -126,7 +147,7 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
             utterance.voice = voiceObj;
             utterance.lang = voiceObj.lang;
 
-            const rate = (voiceObj.lang === 'ka-GE')
+            const rate = (voiceObj.name.includes('Eka') || voiceObj.name.includes('Giorgi') || voiceObj.lang === 'ka-GE')
                 ? parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || 1)
                 : parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || 1);
 
@@ -142,21 +163,24 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
                 resolve();
             };
 
+            utterance.onerror = () => {
+                if (buttonEl) buttonEl.classList.remove('active');
+                if (el) el.classList.remove('highlighted-sentence');
+                lastSpokenButton = null;
+                resolve();
+            };
+
             speechSynthesis.speak(utterance);
         });
     };
 
     speechSynthesis.cancel();
     delay(100).then(async () => {
-        if (highlightEl) highlightEl.classList.add('highlighted-sentence');
         await speak(text, highlightEl);
         if (extraText) {
             await delay(50);
             await speak(extraText);
         }
-        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-        if (buttonEl) buttonEl.classList.remove('active');
-        lastSpokenButton = null;
     });
 }
 
