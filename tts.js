@@ -86,17 +86,15 @@ function populateGeorgianDropdown() {
 
 function loadVoices() {
     const voices = speechSynthesis.getVoices();
-
     populateVoiceDropdown();
     populateGeorgianDropdown();
 
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-    selectedVoice = voices.find(v => v.name === storedVoice) || voices.find(v => v.lang.startsWith('en'));
+    selectedVoice = voices.find(v => v.name === storedVoice);
 
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || voices.find(v => v.lang.startsWith('ka'));
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
 }
-
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
@@ -107,11 +105,10 @@ function loadVoicesWithDelay(retry = 0) {
     setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
 }
 
-
 speechSynthesis.onvoiceschanged = loadVoices;
 
-async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis) return;
+function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
+    if (!window.speechSynthesis || !voiceObj) return;
 
     if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
         speechSynthesis.cancel();
@@ -123,19 +120,13 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
 
     lastSpokenButton = buttonEl;
 
-    const speak = (txt, el, lang) => {
+    const speak = (txt, el) => {
         return new Promise(resolve => {
             const utterance = new SpeechSynthesisUtterance(txt);
+            utterance.voice = voiceObj;
+            utterance.lang = voiceObj.lang;
 
-            // fallback: თუ ხმა ვერ მოიძებნა
-            if (voiceObj) {
-                utterance.voice = voiceObj;
-                utterance.lang = voiceObj.lang;
-            } else {
-                utterance.lang = lang || 'en-US';
-            }
-
-            const rate = (utterance.lang === 'ka-GE')
+            const rate = (voiceObj.lang === 'ka-GE')
                 ? parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || 1)
                 : parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || 1);
 
@@ -156,21 +147,18 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
     };
 
     speechSynthesis.cancel();
-    await delay(100);
-
-    const langFallback = (voiceObj && voiceObj.lang) || (text.match(/[ა-ჰ]/) ? 'ka-GE' : 'en-US');
-
-    await speak(text, highlightEl, langFallback);
-    if (extraText) {
-        await delay(50);
-        await speak(extraText, highlightEl, langFallback);
-    }
-
-    if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-    if (buttonEl) buttonEl.classList.remove('active');
-    lastSpokenButton = null;
+    delay(100).then(async () => {
+        if (highlightEl) highlightEl.classList.add('highlighted-sentence');
+        await speak(text, highlightEl);
+        if (extraText) {
+            await delay(50);
+            await speak(extraText);
+        }
+        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+        if (buttonEl) buttonEl.classList.remove('active');
+        lastSpokenButton = null;
+    });
 }
-
 
 document.addEventListener('click', (e) => {
     const speakBtn = e.target.closest('.speak-btn');
