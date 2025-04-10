@@ -672,10 +672,70 @@ closeSidebarBtn.onclick = () => {
 };
 
 
+function addMobileTTSControls() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        const word = card.querySelector('.word').textContent;
+        const translation = card.querySelector('.translation').textContent;
 
+        const mobileControls = document.createElement('div');
+        mobileControls.className = 'mobile-tts-controls';
+        mobileControls.innerHTML = `
+            <button class="mobile-speak-btn" data-lang="en" data-text="${word}">
+                <i class="fas fa-volume-up"></i> EN
+            </button>
+            <button class="mobile-speak-btn" data-lang="ka" data-text="${translation}">
+                <i class="fas fa-volume-up"></i> KA
+            </button>
+        `;
 
+        card.querySelector('.card-header').appendChild(mobileControls);
+    });
+}
+function setupMobilePlayer() {
+    const player = document.querySelector('.player');
+    if (!player) return;
+
+    player.style.position = 'fixed';
+    player.style.bottom = '60px';
+    player.style.left = '0';
+    player.style.right = '0';
+    player.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    player.style.padding = '10px';
+    player.style.display = 'flex';
+    player.style.justifyContent = 'space-around';
+    player.style.zIndex = '1000';
+
+    // დავამატოთ დამატებითი კონტროლები
+    const rateControl = document.createElement('div');
+    rateControl.className = 'mobile-rate-control';
+    rateControl.innerHTML = `
+        <span>სიჩქარე:</span>
+        <select id="mobileRateSelect">
+            <option value="0.7">ნელი</option>
+            <option value="1" selected>ნორმალური</option>
+            <option value="1.3">სწრაფი</option>
+        </select>
+    `;
+    player.appendChild(rateControl);
+
+    document.getElementById('mobileRateSelect').addEventListener('change', (e) => {
+        const rate = parseFloat(e.target.value);
+        localStorage.setItem(ENGLISH_RATE_KEY, rate);
+        localStorage.setItem(GEORGIAN_RATE_KEY, rate);
+    });
+}
 // ==== გადმოტვირთვა localStorage-დან ====
 document.addEventListener('DOMContentLoaded', () => {
+
+    // TTS ინიციალიზაცია მობილურისთვის
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // დავამატოთ მობილურისთვის სპეციალური ღილაკები
+        addMobileTTSControls();
+
+        // დავამატოთ TTS ფლეიერის კონტროლი
+        setupMobilePlayer();
+    }
     const closeBtn = document.getElementById('closePreviewBtn');
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
