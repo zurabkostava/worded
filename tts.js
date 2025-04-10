@@ -39,6 +39,7 @@ function delay(ms) {
 function loadSpeechRates() {
     const englishRateSlider = document.getElementById('englishRateSlider');
     const georgianRateSlider = document.getElementById('georgianRateSlider');
+
     englishRateSlider.value = localStorage.getItem(ENGLISH_RATE_KEY) || 1;
     georgianRateSlider.value = localStorage.getItem(GEORGIAN_RATE_KEY) || 1;
 }
@@ -48,27 +49,31 @@ function populateVoiceDropdown() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
 
-    let hasMatch = false;
-    voices.forEach(voice => {
-        if (
-            allowedVoicesEnglish.includes(voice.name) ||
-            voice.lang.startsWith('en')
-        ) {
+    let fallbackSet = false;
+
+    allowedVoicesEnglish.forEach(name => {
+        const voice = voices.find(v => v.name === name);
+        if (voice) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
             if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
                 option.selected = true;
                 selectedVoice = voice;
+                fallbackSet = true;
             }
             voiceSelect.appendChild(option);
-            hasMatch = true;
         }
     });
 
-    if (!selectedVoice && voices.length > 0) {
+    if (!selectedVoice && voices.length > 0 && !fallbackSet) {
         selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
         localStorage.setItem(VOICE_STORAGE_KEY, selectedVoice.name);
+        const fallbackOption = document.createElement('option');
+        fallbackOption.value = selectedVoice.name;
+        fallbackOption.textContent = `[Default] ${selectedVoice.name}`;
+        fallbackOption.selected = true;
+        voiceSelect.appendChild(fallbackOption);
     }
 }
 
@@ -77,35 +82,36 @@ function populateGeorgianDropdown() {
     const geoSelect = document.getElementById('georgianVoiceSelect');
     geoSelect.innerHTML = '';
 
-    let hasMatch = false;
-    voices.forEach(voice => {
-        if (
-            allowedVoicesGeorgian.includes(voice.name) ||
-            voice.lang === 'ka-GE'
-        ) {
+    let fallbackSet = false;
+
+    allowedVoicesGeorgian.forEach(name => {
+        const voice = voices.find(v => v.name === name);
+        if (voice) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
             if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
                 option.selected = true;
                 selectedGeorgianVoice = voice;
+                fallbackSet = true;
             }
             geoSelect.appendChild(option);
-            hasMatch = true;
         }
     });
 
-    if (!selectedGeorgianVoice && voices.length > 0) {
-        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || null;
-        if (selectedGeorgianVoice) {
-            localStorage.setItem(GEORGIAN_VOICE_KEY, selectedGeorgianVoice.name);
-        }
+    if (!selectedGeorgianVoice && voices.length > 0 && !fallbackSet) {
+        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
+        localStorage.setItem(GEORGIAN_VOICE_KEY, selectedGeorgianVoice.name);
+        const fallbackOption = document.createElement('option');
+        fallbackOption.value = selectedGeorgianVoice.name;
+        fallbackOption.textContent = `[Default] ${selectedGeorgianVoice.name}`;
+        fallbackOption.selected = true;
+        geoSelect.appendChild(fallbackOption);
     }
 }
 
 function loadVoices() {
     const voices = speechSynthesis.getVoices();
-
     populateVoiceDropdown();
     populateGeorgianDropdown();
 
@@ -116,24 +122,16 @@ function loadVoices() {
     selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || selectedGeorgianVoice;
 }
 
-function loadVoicesWithDelay(retry = 0) {
-    const voices = speechSynthesis.getVoices();
-    if (voices.length > 0 || retry >= 10) {
-        loadVoices();
-        return;
-    }
-    setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
-}
+window.addEventListener('load', () => {
+    loadSpeechRates();
+    loadVoicesWithForce();
+});
 
-speechSynthesis.onvoiceschanged = loadVoices;
+
+speechSynthesis.onvoiceschanged = loadVoicesWithDelay;
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis) return;
-
-    if (!voiceObj) {
-        const voices = speechSynthesis.getVoices();
-        voiceObj = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
-    }
+    if (!window.speechSynthesis || !voiceObj) return;
 
     if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
         speechSynthesis.cancel();
@@ -201,21 +199,29 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
+// Try to "wake up" voices
+window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+setTimeout(() => {
+    const voices = speechSynthesis.getVoices();
+    console.log(voices); // Debug: do voices appear?
+}, 500);
+function loadVoicesWithForce(retry = 0) {
+    const voices = speechSynthesis.getVoices();
 
-
-
-
-window.addEventListener('load', () => {
-    function forceVoiceInit(callback) {
-        const dummy = new SpeechSynthesisUtterance('...');
-        dummy.volume = 0; // არ ისმოდეს
-        dummy.rate = 10;  // ძალიან სწრაფი, სწრაფად დასრულდეს
-        dummy.pitch = 0;
-        dummy.onend = () => {
-            setTimeout(callback, 200); // დაყოვნება, რომ getVoices მზად იყოს
-        };
-        speechSynthesis.speak(dummy);
+    if (voices.length > 0 || retry >= 10) {
+        loadVoices();
+        return;
     }
-    loadSpeechRates();
-    forceVoiceInit(loadVoicesWithDelay); // ✅ პირველი გააღვიძებს, შემდეგ გამოიძახებს ხმებს
-});
+
+    // Try to wake voices manually
+    const dummy = new SpeechSynthesisUtterance('');
+    speechSynthesis.speak(dummy);
+
+    setTimeout(() => loadVoicesWithForce(retry + 1), 300);
+}
+
+
+console.log('Voices Loaded:', speechSynthesis.getVoices());
+if (voices.length === 0) {
+    alert("⚠ ხმოვანი მოდელები ვერ მოიძებნა. სცადე ბრაუზერის Read Aloud, ან გამოიყენე Edge Android-ში.");
+}
