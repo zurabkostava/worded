@@ -2193,16 +2193,28 @@ function saveToStorage() {
 }
 
 function loadCardsFromStorage() {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem("english_cards_app");
     if (!stored) return;
-
     const data = JSON.parse(stored);
-    if (data.tagLibrary) {
+
+    // 1. გაწმენდა
+    allTags.clear();
+
+    // 2. თუა tagLibrary, ჩავამატოთ `allTags`-ში
+    if (data.tagLibrary && data.tagLibrary.length) {
         data.tagLibrary.forEach(tag => allTags.add(tag));
     }
 
-    if (data.cards) {
-        data.cards.forEach(renderCardFromData);
-    }
+    // 3. შემდეგ გავივლით თითო ბარათს და ვახატავთ
+    data.cards.forEach(cardData => {
+        // თუ ბარათშია tags, შევიტანოთ allTags-შიც
+        if (cardData.tags) {
+            cardData.tags.forEach(t => allTags.add(t));
+        }
+        renderCardFromData(cardData);
+    });
+
+    // 4. დაბოლოს, გამოვიძახოთ	renderTagLibrary() – რომ თეგების ბიბლიოტეკაც წარმოიქმნას
+    renderTagLibrary();
 }
 
