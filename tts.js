@@ -98,49 +98,12 @@ function loadVoices() {
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
-
     if (voices.length > 0 || retry >= 10) {
-        if (voices.length === 0) {
-            console.warn("🎙 Android fallback აქტიურია — ხმები არ დაბრუნდა!");
-            useAndroidTTSFallback(); // ➕ სპეციალური fallback
-        } else {
-            loadVoices();
-        }
+        loadVoices();
         return;
     }
-
     setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
 }
-
-function useAndroidTTSFallback() {
-    // fallback ხმები
-    const defaultEn = speechSynthesis.getVoices().find(v => v.lang.startsWith('en'));
-    const defaultKa = speechSynthesis.getVoices().find(v => v.lang.startsWith('ka'))
-        || speechSynthesis.getVoices().find(v => v.lang.startsWith('en'));
-
-    if (defaultEn) {
-        selectedVoice = defaultEn;
-        localStorage.setItem(VOICE_STORAGE_KEY, defaultEn.name);
-    }
-
-    if (defaultKa) {
-        selectedGeorgianVoice = defaultKa;
-        localStorage.setItem(GEORGIAN_VOICE_KEY, defaultKa.name);
-    }
-
-    // მინიმალური dropdown voice names
-    const voiceSelect = document.getElementById('voiceSelect');
-    const geoSelect = document.getElementById('georgianVoiceSelect');
-
-    if (voiceSelect) {
-        voiceSelect.innerHTML = `<option selected value="${defaultEn.name}">${defaultEn.name}</option>`;
-    }
-
-    if (geoSelect) {
-        geoSelect.innerHTML = `<option selected value="${defaultKa.name}">${defaultKa.name}</option>`;
-    }
-}
-
 
 speechSynthesis.onvoiceschanged = loadVoices;
 
