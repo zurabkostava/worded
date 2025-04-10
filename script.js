@@ -810,6 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 150); // მცირე დაყოვნება (~150ms) რომ თავიდან აირიდო ორმაგი ხმა
     }
 
+    loadVoices();
 
 
 
@@ -1448,44 +1449,34 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
 
 
 
+let voices = [];
 
 
 let selectedVoice = null;
 
 function loadVoices() {
-    const voices = speechSynthesis.getVoices();
+    voices = speechSynthesis.getVoices();
 
-    // fallback for Edge
     if (!voices.length) {
-        // ხელით trigger
         speechSynthesis.onvoiceschanged = () => {
+            voices = speechSynthesis.getVoices();
             populateVoiceDropdown();
             populateGeorgianDropdown();
-
-            const allVoices = speechSynthesis.getVoices();
-
-            // ისევ აირჩიე შენახული ხმები
-            const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-            const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-
-            selectedVoice = allVoices.find(v => v.name === storedVoice);
-            selectedGeorgianVoice = allVoices.find(v => v.name === storedGeo);
-
-            speechSynthesis.onvoiceschanged = null; // გაასუფთავე
+            setDefaultVoices();
         };
-        return;
+    } else {
+        populateVoiceDropdown();
+        populateGeorgianDropdown();
+        setDefaultVoices();
     }
-
-    populateVoiceDropdown();
-    populateGeorgianDropdown();
-
+}
+function setDefaultVoices() {
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
 
-    selectedVoice = voices.find(v => v.name === storedVoice);
-    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
+    selectedVoice = voices.find(v => v.name === storedVoice) || voices.find(v => v.name.includes('Maisie') && v.lang === 'en-GB');
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || voices.find(v => v.name.includes('Eka'));
 }
-
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
@@ -1536,7 +1527,6 @@ speechSynthesis.onvoiceschanged = () => {
 };
 
 
-window.speechSynthesis.onvoiceschanged = loadVoices;
 
 let isSpeaking = false;
 
