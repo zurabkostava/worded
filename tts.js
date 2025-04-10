@@ -98,12 +98,32 @@ function loadVoices() {
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
+
     if (voices.length > 0 || retry >= 10) {
-        loadVoices();
+        if (voices.length === 0 && isAndroidEdge()) {
+            console.warn("Edge on Android: fallback to default system voice.");
+            selectedVoice = null;
+            selectedGeorgianVoice = null;
+
+            const voiceSelect = document.getElementById('voiceSelect');
+            const geoSelect = document.getElementById('georgianVoiceSelect');
+
+            if (voiceSelect) {
+                voiceSelect.innerHTML = '<option selected>Default system voice</option>';
+            }
+            if (geoSelect) {
+                geoSelect.innerHTML = '<option selected>Default system voice</option>';
+            }
+
+        } else {
+            loadVoices(); // Normal behavior
+        }
         return;
     }
-    setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
+
+    setTimeout(() => loadVoicesWithDelay(retry + 1), 300);
 }
+
 
 
 // 🆕 გამოიყენე fallback default ხმები
@@ -144,10 +164,19 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
     const speak = (txt, el) => {
         return new Promise(resolve => {
             const utterance = new SpeechSynthesisUtterance(txt);
+
+            // ✅ Fallback for Android Edge
+            if (!voiceObj && isAndroidEdge()) {
+                utterance.rate = 1;
+                speechSynthesis.speak(utterance);
+                resolve();
+                return;
+            }
+
             utterance.voice = voiceObj;
             utterance.lang = voiceObj.lang;
 
-            const rate = (voiceObj.name.includes('Eka') || voiceObj.name.includes('Giorgi') || voiceObj.lang === 'ka-GE')
+            const rate = (voiceObj.lang === 'ka-GE')
                 ? parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || 1)
                 : parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || 1);
 
@@ -163,16 +192,10 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
                 resolve();
             };
 
-            utterance.onerror = () => {
-                if (buttonEl) buttonEl.classList.remove('active');
-                if (el) el.classList.remove('highlighted-sentence');
-                lastSpokenButton = null;
-                resolve();
-            };
-
             speechSynthesis.speak(utterance);
         });
     };
+
 
     speechSynthesis.cancel();
     delay(100).then(async () => {
@@ -200,3 +223,7 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
+function isAndroidEdge() {
+    const ua = navigator.userAgent;
+    return ua.includes('EdgA') && ua.includes('Android');
+}
