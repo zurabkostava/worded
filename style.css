@@ -2393,3 +2393,52 @@ textarea {
 
 }
 
+/* მობილურის TTS კონტროლები */
+.mobile-tts-controls {
+    display: flex;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.mobile-speak-btn {
+    padding: 3px 8px;
+    font-size: 12px;
+    border: none;
+    border-radius: 12px;
+    background-color: #4a6fa5;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.mobile-speak-btn i {
+    font-size: 10px;
+}
+
+/* მობილურისთვის პლეიერის სტილები */
+@media (max-width: 768px) {
+    .player {
+        position: fixed !important;
+        bottom: 60px !important;
+        left: 0 !important;
+        right: 0 !important;
+        background: rgba(0,0,0,0.8) !important;
+        padding: 10px !important;
+        display: flex !important;
+        justify-content: space-around !important;
+        z-index: 1000 !important;
+    }
+
+    .mobile-rate-control {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: white;
+    }
+
+    .mobile-rate-control select {
+        padding: 3px;
+        border-radius: 5px;
+    }
+}
