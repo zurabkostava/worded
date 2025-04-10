@@ -242,7 +242,7 @@ nextBtn.onclick = async () => {
 
     document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
     card.classList.add('playing');
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // card.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     if (!previewManuallyClosed && isPlaying) {
         loadCardIntoModal(card);
