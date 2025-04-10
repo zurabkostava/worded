@@ -680,35 +680,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
-
-    function preloadAndroidVoices() {
-        const voices = speechSynthesis.getVoices();
-        if (voices.length) return; // უკვე ჩაიტვირთა
-
-        // Dummy utterance რომელიც არ ისმის
-        const dummy = new SpeechSynthesisUtterance(' ');
-        dummy.volume = 0;
-        dummy.rate = 1;
-        dummy.pitch = 1;
-        dummy.lang = 'en-US';
-
-        // როცა დასრულდება — თავიდან ვცადოთ ხმების ჩატვირთვა
-        dummy.onend = () => {
-            setTimeout(() => {
-                loadVoices();
-                populateVoiceDropdown();
-                populateGeorgianDropdown();
-            }, 200);
-        };
-
-        speechSynthesis.speak(dummy);
-    }
-    if (speechSynthesis.getVoices().length === 0) {
-        alert("⚠ ხმები ჯერ არ არის ჩატვირთული. სცადე ხელახლა ან დააჭირე 'Play' ღილაკს თავიდან.");
-    }
-
-    loadVoicesWithDelay();
-    preloadAndroidVoices(); // ← ეს დამატებული
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
