@@ -49,39 +49,54 @@ function populateVoiceDropdown() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
 
-    allowedVoicesEnglish.forEach(name => {
-        const voice = voices.find(v => v.name === name);
-        if (voice) {
+    let hasSelected = false;
+
+    voices
+        .filter(v => v.lang.startsWith('en')) // მხოლოდ ინგლისური
+        .forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
             if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
                 option.selected = true;
                 selectedVoice = voice;
+                hasSelected = true;
             }
             voiceSelect.appendChild(option);
-        }
-    });
+        });
+
+    // fallback default
+    if (!hasSelected && voices.length > 0) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
 }
+
 
 function populateGeorgianDropdown() {
     const voices = speechSynthesis.getVoices();
     const geoSelect = document.getElementById('georgianVoiceSelect');
     geoSelect.innerHTML = '';
 
-    allowedVoicesGeorgian.forEach(name => {
-        const voice = voices.find(v => v.name === name);
-        if (voice) {
+    let hasSelected = false;
+
+    voices
+        .filter(v => v.lang.startsWith('ka') || v.name.includes('Giorgi') || v.name.includes('Eka'))
+        .forEach(voice => {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
             if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
                 option.selected = true;
                 selectedGeorgianVoice = voice;
+                hasSelected = true;
             }
             geoSelect.appendChild(option);
-        }
-    });
+        });
+
+    // fallback default
+    if (!hasSelected && voices.length > 0) {
+        selectedGeorgianVoice = voices.find(v => v.lang.startsWith('ka')) || voices[0];
+    }
 }
 
 function loadVoices() {
@@ -91,27 +106,41 @@ function loadVoices() {
 
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
     selectedVoice = voices.find(v => v.name === storedVoice);
+
+    // 📱 fallback for mobile: default English voice
     if (!selectedVoice) {
-        selectedVoice = getFallbackVoice('en');
+        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
     }
 
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
     selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
+
+    // 📱 fallback for mobile: default Georgian voice or similar
     if (!selectedGeorgianVoice) {
-        selectedGeorgianVoice = getFallbackVoice('ka');
+        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
     }
 }
-
 
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
+
     if (voices.length > 0 || retry >= 10) {
-        loadVoices();
+        // ➕ fallback თუ არ მოიძებნა არჩეული ხმა
+        const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
+        selectedVoice = voices.find(v => v.name === storedVoice) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+        const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
+        selectedGeorgianVoice = voices.find(v => v.name === storedGeo) || voices.find(v => v.lang.startsWith('ka')) || voices[0];
+
+        populateVoiceDropdown();
+        populateGeorgianDropdown();
         return;
     }
+
     setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
 }
+
 
 speechSynthesis.onvoiceschanged = loadVoices;
 
@@ -119,8 +148,6 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
     if (!window.speechSynthesis || !text) return;
 
     if (!voiceObj) {
-        // fallback ხმაზე გადასვლა
-        voiceObj = getFallbackVoice();
         // 📱 fallback ხმა ტელეფონებისთვის
         const fallbackLang = text.charCodeAt(0) > 128 ? 'ka-GE' : 'en';
         voiceObj = speechSynthesis.getVoices().find(v => v.lang === fallbackLang)
@@ -195,8 +222,3 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
-function getFallbackVoice(lang = 'en') {
-    const voices = speechSynthesis.getVoices();
-    const fallback = voices.find(v => v.lang.startsWith(lang));
-    return fallback || voices[0]; // თუ ვერაფერი მოიძებნა, პირველი
-}
