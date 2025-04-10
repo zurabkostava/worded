@@ -1,4 +1,5 @@
-// tts.js - Updated for mobile compatibility
+// ==== tts.js ====
+
 const VOICE_STORAGE_KEY = 'selected_voice_name';
 const GEORGIAN_VOICE_KEY = 'selected_georgian_voice';
 const ENGLISH_RATE_KEY = 'english_voice_rate';
@@ -9,21 +10,27 @@ let selectedGeorgianVoice = null;
 let isSpeaking = false;
 let lastSpokenButton = null;
 
-// Mobile-friendly voice selection
-const mobileVoices = {
-    english: [
-        { name: "Microsoft Libby Online", lang: "en-GB" },
-        { name: "Microsoft Maisie Online", lang: "en-GB" },
-        { name: "Microsoft Ryan Online", lang: "en-GB" },
-        { name: "Microsoft Sonia Online", lang: "en-GB" },
-        { name: "Microsoft Thomas Online", lang: "en-GB" },
-        { name: "Microsoft Ana Online", lang: "en-US" }
-    ],
-    georgian: [
-        { name: "Microsoft Eka Online", lang: "ka-GE" },
-        { name: "Microsoft Giorgi Online", lang: "ka-GE" }
-    ]
-};
+const allowedVoicesEnglish = [
+    "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
+    "Microsoft AvaMultilingual Online (Natural) - English (United States)",
+    "Microsoft BrianMultilingual Online (Natural) - English (United States)",
+    "Microsoft EmmaMultilingual Online (Natural) - English (United States)",
+    "Microsoft Libby Online (Natural) - English (United Kingdom)",
+    "Microsoft Maisie Online (Natural) - English (United Kingdom)",
+    "Microsoft Ryan Online (Natural) - English (United Kingdom)",
+    "Microsoft Sonia Online (Natural) - English (United Kingdom)",
+    "Microsoft Thomas Online (Natural) - English (United Kingdom)",
+    "Microsoft Ana Online (Natural) - English (United States)"
+];
+
+const allowedVoicesGeorgian = [
+    "Microsoft Giorgi Online (Natural) - Georgian (Georgia)",
+    "Microsoft Eka Online (Natural) - Georgian (Georgia)",
+    "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
+    "Microsoft AvaMultilingual Online (Natural) - English (United States)",
+    "Microsoft BrianMultilingual Online (Natural) - English (United States)",
+    "Microsoft EmmaMultilingual Online (Natural) - English (United States)"
+];
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -37,121 +44,59 @@ function loadSpeechRates() {
     georgianRateSlider.value = localStorage.getItem(GEORGIAN_RATE_KEY) || 1;
 }
 
-function isMobileDevice() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
 function populateVoiceDropdown() {
+    const voices = speechSynthesis.getVoices();
     const voiceSelect = document.getElementById('voiceSelect');
-    voiceSelect.innerHTML = '<option value="" disabled selected>Select voice</option>';
+    voiceSelect.innerHTML = '';
 
-    if (isMobileDevice()) {
-        // Mobile devices - use predefined voices
-        mobileVoices.english.forEach(voice => {
+    allowedVoicesEnglish.forEach(name => {
+        const voice = voices.find(v => v.name === name);
+        if (voice) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
             if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
                 option.selected = true;
-                selectedVoice = new SpeechSynthesisVoiceMock(voice.name, voice.lang);
+                selectedVoice = voice;
             }
             voiceSelect.appendChild(option);
-        });
-    } else {
-        // Desktop - use actual voices
-        const voices = speechSynthesis.getVoices();
-        voices
-            .filter(v => v.lang.includes('en'))
-            .forEach(voice => {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                if (localStorage.getItem(VOICE_STORAGE_KEY) === voice.name) {
-                    option.selected = true;
-                    selectedVoice = voice;
-                }
-                voiceSelect.appendChild(option);
-            });
-    }
+        }
+    });
 }
 
 function populateGeorgianDropdown() {
+    const voices = speechSynthesis.getVoices();
     const geoSelect = document.getElementById('georgianVoiceSelect');
-    geoSelect.innerHTML = '<option value="" disabled selected>Select voice</option>';
+    geoSelect.innerHTML = '';
 
-    if (isMobileDevice()) {
-        // Mobile devices - use predefined voices
-        mobileVoices.georgian.forEach(voice => {
+    allowedVoicesGeorgian.forEach(name => {
+        const voice = voices.find(v => v.name === name);
+        if (voice) {
             const option = document.createElement('option');
             option.value = voice.name;
             option.textContent = voice.name;
             if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
                 option.selected = true;
-                selectedGeorgianVoice = new SpeechSynthesisVoiceMock(voice.name, voice.lang);
+                selectedGeorgianVoice = voice;
             }
             geoSelect.appendChild(option);
-        });
-    } else {
-        // Desktop - use actual voices
-        const voices = speechSynthesis.getVoices();
-        voices
-            .filter(v => v.lang.includes('ka'))
-            .forEach(voice => {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                if (localStorage.getItem(GEORGIAN_VOICE_KEY) === voice.name) {
-                    option.selected = true;
-                    selectedGeorgianVoice = voice;
-                }
-                geoSelect.appendChild(option);
-            });
-    }
-}
-
-// Mock voice object for mobile devices
-function SpeechSynthesisVoiceMock(name, lang) {
-    return {
-        name: name,
-        lang: lang,
-        voiceURI: name,
-        localService: true,
-        default: false
-    };
+        }
+    });
 }
 
 function loadVoices() {
-    if (isMobileDevice()) {
-        // On mobile, we use our predefined voices
-        const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
-        const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
-
-        // Find matching voice from our predefined list
-        if (storedVoice) {
-            const voice = mobileVoices.english.find(v => v.name === storedVoice);
-            if (voice) {
-                selectedVoice = new SpeechSynthesisVoiceMock(voice.name, voice.lang);
-            }
-        }
-
-        if (storedGeo) {
-            const voice = mobileVoices.georgian.find(v => v.name === storedGeo);
-            if (voice) {
-                selectedGeorgianVoice = new SpeechSynthesisVoiceMock(voice.name, voice.lang);
-            }
-        }
-    }
-
+    const voices = speechSynthesis.getVoices();
     populateVoiceDropdown();
     populateGeorgianDropdown();
+
+    const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
+    selectedVoice = voices.find(v => v.name === storedVoice);
+
+    const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
+    selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
 }
 
 function loadVoicesWithDelay(retry = 0) {
-    if (isMobileDevice()) {
-        loadVoices();
-        return;
-    }
-
     const voices = speechSynthesis.getVoices();
     if (voices.length > 0 || retry >= 10) {
         loadVoices();
@@ -160,95 +105,61 @@ function loadVoicesWithDelay(retry = 0) {
     setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
 }
 
-// Initialize speech synthesis
-if ('speechSynthesis' in window) {
-    speechSynthesis.onvoiceschanged = loadVoices;
-
-    // Some browsers don't fire the voiceschanged event
-    setTimeout(loadVoicesWithDelay, 1000);
-} else {
-    console.warn('Speech Synthesis API not supported');
-}
+speechSynthesis.onvoiceschanged = loadVoices;
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis || !voiceObj) {
-        console.warn('Speech synthesis not available');
-        return Promise.resolve();
-    }
+    if (!window.speechSynthesis || !voiceObj) return;
 
-    // Cancel if same button is clicked while speaking
     if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
         speechSynthesis.cancel();
         if (buttonEl) buttonEl.classList.remove('active');
         if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
         lastSpokenButton = null;
-        return Promise.resolve();
+        return;
     }
 
     lastSpokenButton = buttonEl;
 
-    return new Promise((resolve) => {
-        // Mobile devices often need a small delay between utterances
-        speechSynthesis.cancel();
+    const speak = (txt, el) => {
+        return new Promise(resolve => {
+            const utterance = new SpeechSynthesisUtterance(txt);
+            utterance.voice = voiceObj;
+            utterance.lang = voiceObj.lang;
 
-        setTimeout(() => {
-            const speakText = (txt, lang) => {
-                return new Promise((innerResolve) => {
-                    const utterance = new SpeechSynthesisUtterance(txt);
+            const rate = (voiceObj.lang === 'ka-GE')
+                ? parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || 1)
+                : parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || 1);
 
-                    // Set voice properties
-                    utterance.voice = voiceObj;
-                    utterance.lang = lang || voiceObj.lang;
+            utterance.rate = rate;
 
-                    // Set rate from localStorage
-                    const rateKey = (lang === 'ka-GE') ? GEORGIAN_RATE_KEY : ENGLISH_RATE_KEY;
-                    utterance.rate = parseFloat(localStorage.getItem(rateKey) || 1;
+            if (buttonEl) buttonEl.classList.add('active');
+            if (el) el.classList.add('highlighted-sentence');
 
-                    // UI updates
-                    if (buttonEl) buttonEl.classList.add('active');
-                    if (highlightEl) highlightEl.classList.add('highlighted-sentence');
-
-                    utterance.onend = () => {
-                        if (buttonEl) buttonEl.classList.remove('active');
-                        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-                        innerResolve();
-                    };
-
-                    utterance.onerror = (e) => {
-                        console.error('SpeechSynthesis error:', e);
-                        if (buttonEl) buttonEl.classList.remove('active');
-                        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-                        innerResolve();
-                    };
-
-                    speechSynthesis.speak(utterance);
-                });
+            utterance.onend = () => {
+                if (buttonEl) buttonEl.classList.remove('active');
+                if (el) el.classList.remove('highlighted-sentence');
+                lastSpokenButton = null;
+                resolve();
             };
 
-            // Chain the speech operations
-            (async () => {
-                try {
-                    if (highlightEl) highlightEl.classList.add('highlighted-sentence');
-                    await speakText(text);
+            speechSynthesis.speak(utterance);
+        });
+    };
 
-                    if (extraText) {
-                        await delay(300); // Small delay between parts
-                        await speakText(extraText);
-                    }
-                } catch (e) {
-                    console.error('Speech error:', e);
-                } finally {
-                    if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-                    if (buttonEl) buttonEl.classList.remove('active');
-                    lastSpokenButton = null;
-                    resolve();
-                }
-            })();
-        }, 100); // Initial delay to ensure cancellation works
+    speechSynthesis.cancel();
+    delay(100).then(async () => {
+        if (highlightEl) highlightEl.classList.add('highlighted-sentence');
+        await speak(text, highlightEl);
+        if (extraText) {
+            await delay(50);
+            await speak(extraText);
+        }
+        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
+        if (buttonEl) buttonEl.classList.remove('active');
+        lastSpokenButton = null;
     });
 }
 
-// Handle speak button clicks
 document.addEventListener('click', (e) => {
     const speakBtn = e.target.closest('.speak-btn');
     if (!speakBtn) return;
@@ -264,19 +175,4 @@ document.addEventListener('click', (e) => {
     } else {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
-});
-
-// Add this to your existing utils.js or script.js
-function checkTTSSupport() {
-    if (!('speechSynthesis' in window)) {
-        alert('Text-to-speech is not supported in your browser. Please try Chrome or Firefox.');
-        return false;
-    }
-    return true;
-}
-
-// Call this when initializing your app
-document.addEventListener('DOMContentLoaded', () => {
-    checkTTSSupport();
-    loadVoicesWithDelay();
 });
