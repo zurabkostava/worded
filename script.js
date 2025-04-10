@@ -2078,9 +2078,3 @@ function loadCardsFromStorage() {
     renderTagLibrary();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const proxyText = document.getElementById("readAloudText");
-    if (proxyText) {
-        proxyText.textContent = "This is an English learning web app. You can select text and use Read Aloud on Microsoft Edge.";
-    }
-});
