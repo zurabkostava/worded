@@ -699,11 +699,14 @@ document.addEventListener('DOMContentLoaded', () => {
             XLSX.writeFile(workbook, "template.xlsx");
         });
     }
+    //
+    // loadVoices();
+    // loadVoicesWithDelay(); // <-- ახალი ფუნქცია
 
     setTimeout(() => {
         loadVoices();
         loadVoicesWithDelay();
-    }, 500); // ან მეტი, თუ Edge-ში პრობლემაა
+    }, 2000); // 2 წამით გადავადება
 
 
     if (stored) {
