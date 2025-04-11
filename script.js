@@ -682,8 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
-
-
+    
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
@@ -708,17 +707,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let voicesLoaded = false;
 
     function safeLoadVoices() {
-        if (typeof speechSynthesis === 'undefined') return;
-
-        const voices = speechSynthesis.getVoices();
-        if (voices.length > 0) {
-            selectedVoice = voices.find(v => v.lang === 'en-US') || voices[0];
-        }
-
-        // რაც გინდა ის გააგრძელე
+        if (voicesLoaded) return;
+        loadVoices();
+        loadVoicesWithDelay();
+        voicesLoaded = true;
     }
-    setTimeout(safeLoadVoices, 1000); // 1 წამში, არა ეგრევე
-
 
     document.addEventListener('click', safeLoadVoices, { once: true }); // მხოლოდ ერთხელ
 
