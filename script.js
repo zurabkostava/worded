@@ -731,6 +731,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+    function speakWord(text) {
+        if (!window.speechSynthesis) {
+            alert('SpeechSynthesis არ არის ხელმისაწვდომი თქვენს ბრაუზერში');
+            return;
+        }
+
+        // 1. გავაუქმოთ ყველა მიმდინარე წაკითხვა
+        // window.speechSynthesis.cancel();
+
+        // 2. მცირე დაყოვნება, რომ cancel მუშაობდეს სრულად
+        setTimeout(() => {
+            const utterance = new SpeechSynthesisUtterance(text);
+
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+                utterance.lang = selectedVoice.lang; // სავალდებულოა, თორემ default-ით წაიკითხავს ხელახლა
+            } else {
+                utterance.lang = 'en-GB';
+            }
+
+            // 3. გავუშვათ წაკითხვა
+            window.speechSynthesis.speak(utterance);
+        }, 150); // მცირე დაყოვნება (~150ms) რომ თავიდან აირიდო ორმაგი ხმა
+    }
+
+
 
 
     document.addEventListener('click', e => {
