@@ -675,7 +675,148 @@ closeSidebarBtn.onclick = () => {
 
 
 // ==== გადმოტვირთვა localStorage-დან ====
+document.addEventListener('DOMContentLoaded', () => {
+    const closeBtn = document.getElementById('closePreviewBtn');
+    const previewModal = document.getElementById('cardPreviewModal');
+    const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
+    const btn = document.getElementById("downloadTemplateBtn");
+    if (quizTab) {
+        createQuizUI();
+        populateQuizTags();
+    }
+    if (btn) {
+        btn.addEventListener("click", () => {
+            const templateData = [
+                ["Word", "MainTranslations", "ExtraTranslations", "Tags", "EnglishSentences", "GeorgianSentences"]
+            ];
 
+            const worksheet = XLSX.utils.aoa_to_sheet(templateData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+
+            XLSX.writeFile(workbook, "template.xlsx");
+        });
+    }
+
+    loadVoices();
+    loadVoicesWithDelay(); // <-- ახალი ფუნქცია
+
+    if (stored) {
+        const data = JSON.parse(stored);
+        englishSentencesInput.value = data.english || '';
+        georgianSentencesInput.value = data.georgian || '';
+    }
+    if (closeBtn && previewModal) {
+        closeBtn.addEventListener('click', () => {
+            previewModal.style.display = 'none';
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('speak-btn')) {
+            e.stopPropagation();
+            const text = e.target.dataset.text || e.target.dataset.word;
+            const extraText = e.target.dataset.extra || null;
+            const lang = e.target.dataset.lang;
+
+
+            if (lang === 'ka') {
+                speakWithVoice(text, selectedGeorgianVoice, e.target, extraText);
+            } else {
+                speakWithVoice(text, selectedVoice, e.target);
+            }
+
+        }
+    });
+
+
+
+
+
+    document.addEventListener('click', e => {
+        if (e.target.classList.contains('card-tag')) {
+            const tag = e.target.textContent.replace('#', '');
+
+            if (activeFilterTags.has(tag)) {
+                activeFilterTags.delete(tag);
+            } else {
+                activeFilterTags.add(tag);
+            }
+
+            renderSidebarTags();
+            filterCardsByTags();
+        }
+    });
+
+    loadCardsFromStorage();
+    sortCards();
+    // აჩვენე სწორი აიკონის მიმართულება page-ის ჩატვირთვისას
+    if (sortIcon) {
+        sortIcon.classList.remove('fa-sort-up', 'fa-sort-down');
+        sortIcon.classList.add(sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
+    }
+
+
+    document.addEventListener('click', function(e) {
+        const tagInputFocused = tagInput.contains(e.target);
+        const dropdownFocused = tagDropdown.contains(e.target);
+
+        if (!tagInputFocused && !dropdownFocused) {
+            tagDropdown.style.display = 'none';
+        }
+    });
+    tagInput.addEventListener('blur', () => {
+        setTimeout(() => {
+            tagDropdown.style.display = 'none';
+        }, 200); // ოდნავი დაყოვნება – რომ არჩევა მოესწროს
+    });
+
+    const toggleBtn = document.getElementById("toggleDarkModeBtn");
+
+    toggleBtn.addEventListener("click", () => {
+        document.body.classList.toggle("dark");
+        const isDark = document.body.classList.contains("dark");
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+
+        // შეცვალე აიკონი (optional)
+        toggleBtn.innerHTML = `<i class="fas fa-${isDark ? 'sun' : 'moon'}"></i>`;
+    });
+
+// ტემის გახსენება ჩატვირთვისას
+    window.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+            document.body.classList.add("dark");
+            toggleBtn.innerHTML = `<i class="fas fa-sun"></i>`;
+        }
+    });
+
+    document.addEventListener('mousedown', function (e) {
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleSidebarBtn');
+
+        const clickedInsideSidebar = sidebar.contains(e.target);
+        const clickedToggleBtn = toggleBtn.contains(e.target);
+
+        if (!clickedInsideSidebar && !clickedToggleBtn) {
+            sidebar.classList.remove('active');
+        }
+    });
+
+    const script = document.createElement('script');
+    script.src = 'typegame.js';
+    script.onload = () => {
+        const typingTab = document.querySelector('[data-tab-content="tab5"]');
+        if (typingTab) showTypingUI?.();
+    };
+    document.body.appendChild(script);
+
+
+    populateGlobalTags();
+
+
+
+});
 
 // Show modal
 document.getElementById('trainingBtn').addEventListener('click', () => {
