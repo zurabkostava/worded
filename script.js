@@ -1059,7 +1059,16 @@ document.querySelectorAll('.training-tab').forEach(tab => {
 
 
 
-
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    navigator.serviceWorker.ready.then(function(reg) {
+      reg.showNotification("ტესტი Android-ზე", {
+        body: "თუ ხედავ ამას, მუშაობს",
+        icon: "/icons/icon-192.png"
+      });
+    });
+  }, 5000);
+});
 
 // ==== თარგმანების დამატება ====
 addMainTranslationBtn.onclick = () => addTranslation(mainTranslationInput, mainTranslations, mainTranslationTags);
