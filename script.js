@@ -683,13 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
 
-    setTimeout(() => {
-        try {
-            speechSynthesis.getVoices(); // არ გამოვიძახოთ loadVoices() ეგრევე
-        } catch (e) {
-            console.warn('Voice init failed', e);
-        }
-    }, 1000); // დაყოვნება, რომ Accessibility-მა ყველაფერი დაინახოს
+
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
@@ -714,11 +708,17 @@ document.addEventListener('DOMContentLoaded', () => {
     let voicesLoaded = false;
 
     function safeLoadVoices() {
-        if (voicesLoaded) return;
-        loadVoices();
-        loadVoicesWithDelay();
-        voicesLoaded = true;
+        if (typeof speechSynthesis === 'undefined') return;
+
+        const voices = speechSynthesis.getVoices();
+        if (voices.length > 0) {
+            selectedVoice = voices.find(v => v.lang === 'en-US') || voices[0];
+        }
+
+        // რაც გინდა ის გააგრძელე
     }
+    setTimeout(safeLoadVoices, 1000); // 1 წამში, არა ეგრევე
+
 
     document.addEventListener('click', safeLoadVoices, { once: true }); // მხოლოდ ერთხელ
 
