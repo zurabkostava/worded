@@ -36,7 +36,15 @@ body.dark {
 
 
 
-
+#weekdayCheckboxes label {
+    margin-right: 8px;
+}
+.notification-entry {
+    margin-bottom: 10px;
+    padding: 8px;
+    background: #f3f3f3;
+    border-radius: 6px;
+}
 
 .dark .card,
 .dark .modal {
