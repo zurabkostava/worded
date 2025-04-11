@@ -699,14 +699,20 @@ document.addEventListener('DOMContentLoaded', () => {
             XLSX.writeFile(workbook, "template.xlsx");
         });
     }
-    //
+
     // loadVoices();
     // loadVoicesWithDelay(); // <-- ახალი ფუნქცია
 
-    setTimeout(() => {
+    let voicesLoaded = false;
+
+    function safeLoadVoices() {
+        if (voicesLoaded) return;
         loadVoices();
         loadVoicesWithDelay();
-    }, 2000); // 2 წამით გადავადება
+        voicesLoaded = true;
+    }
+
+    document.addEventListener('click', safeLoadVoices, { once: true }); // მხოლოდ ერთხელ
 
 
     if (stored) {
