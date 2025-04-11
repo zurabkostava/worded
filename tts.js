@@ -92,9 +92,20 @@ function loadVoices() {
     const storedVoice = localStorage.getItem(VOICE_STORAGE_KEY);
     selectedVoice = voices.find(v => v.name === storedVoice);
 
+    // 📱 fallback for mobile: default English voice
+    if (!selectedVoice) {
+        selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
+
     const storedGeo = localStorage.getItem(GEORGIAN_VOICE_KEY);
     selectedGeorgianVoice = voices.find(v => v.name === storedGeo);
+
+    // 📱 fallback for mobile: default Georgian voice or similar
+    if (!selectedGeorgianVoice) {
+        selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('en')) || voices[0];
+    }
 }
+
 
 function loadVoicesWithDelay(retry = 0) {
     const voices = speechSynthesis.getVoices();
@@ -107,18 +118,12 @@ function loadVoicesWithDelay(retry = 0) {
 
 speechSynthesis.onvoiceschanged = loadVoices;
 
-function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis || !voiceObj) return;
+async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
+    if (!window.speechSynthesis || !voiceObj || !text) return;
 
-    if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
-        speechSynthesis.cancel();
-        if (buttonEl) buttonEl.classList.remove('active');
-        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-        lastSpokenButton = null;
-        return;
-    }
-
-    lastSpokenButton = buttonEl;
+    // 🔁 უარყავი წინა წამკითხავი
+    speechSynthesis.cancel();
+    await delay(100);
 
     const speak = (txt, el) => {
         return new Promise(resolve => {
@@ -132,33 +137,32 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
 
             utterance.rate = rate;
 
-            if (buttonEl) buttonEl.classList.add('active');
+            // 🔦 Highlight დაწყება
             if (el) el.classList.add('highlighted-sentence');
 
             utterance.onend = () => {
-                if (buttonEl) buttonEl.classList.remove('active');
+                // 🔦 Highlight მოცილება
                 if (el) el.classList.remove('highlighted-sentence');
-                lastSpokenButton = null;
+                if (buttonEl) buttonEl.classList.remove('active');
                 resolve();
             };
+
+            // გააქტიურე ღილაკიც
+            if (buttonEl) buttonEl.classList.add('active');
 
             speechSynthesis.speak(utterance);
         });
     };
 
-    speechSynthesis.cancel();
-    delay(100).then(async () => {
-        if (highlightEl) highlightEl.classList.add('highlighted-sentence');
-        await speak(text, highlightEl);
-        if (extraText) {
-            await delay(50);
-            await speak(extraText);
-        }
-        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-        if (buttonEl) buttonEl.classList.remove('active');
-        lastSpokenButton = null;
-    });
+    await speak(text, highlightEl);
+
+    if (extraText) {
+        await delay(100);
+        await speak(extraText, highlightEl); // გამოიყენე იგივე highlight
+    }
 }
+
+
 
 document.addEventListener('click', (e) => {
     const speakBtn = e.target.closest('.speak-btn');
