@@ -682,6 +682,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
+
+    setTimeout(() => {
+        try {
+            speechSynthesis.getVoices(); // არ გამოვიძახოთ loadVoices() ეგრევე
+        } catch (e) {
+            console.warn('Voice init failed', e);
+        }
+    }, 1000); // დაყოვნება, რომ Accessibility-მა ყველაფერი დაინახოს
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
