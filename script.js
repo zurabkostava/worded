@@ -697,9 +697,11 @@ document.addEventListener('DOMContentLoaded', () => {
             XLSX.writeFile(workbook, "template.xlsx");
         });
     }
-    //
-    // loadVoices();
-    // loadVoicesWithDelay(); // <-- ახალი ფუნქცია
+
+    window.speechSynthesis.onvoiceschanged = () => {
+        loadVoices();
+        loadVoicesWithDelay?.(); // თუ გაქვს
+    };
 
     if (stored) {
         const data = JSON.parse(stored);
