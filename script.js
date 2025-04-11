@@ -682,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
-    
+
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
@@ -1349,7 +1349,18 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
             if (buttonEl) buttonEl.classList.add('active');
             if (el) el.classList.add('highlighted-sentence');
 
+            // ✅ Fallback ტაიმერი – თუ onend არ მოხდება
+            const MAX_SPEAK_DURATION = 10000; // 10 წამი
+            const timeout = setTimeout(() => {
+                console.warn('⏰ speechSynthesis timeout!');
+                speechSynthesis.cancel(); // გააუქმებს წაკითხვას
+                if (buttonEl) buttonEl.classList.remove('active');
+                if (el) el.classList.remove('highlighted-sentence');
+                resolve();
+            }, MAX_SPEAK_DURATION);
+
             utterance.onend = () => {
+                clearTimeout(timeout); // ❌ ტაიმერი არ გაგვიძღვეს
                 if (buttonEl) buttonEl.classList.remove('active');
                 if (el) el.classList.remove('highlighted-sentence');
                 lastSpokenButton = null;
@@ -1359,6 +1370,7 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
             speechSynthesis.speak(utterance);
         });
     };
+
 
     speechSynthesis.cancel();
     await delay(100);
@@ -1392,6 +1404,15 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
 
 
 
+speechSynthesis.onpause = () => {
+    console.log("Speech paused (maybe screen locked)");
+    isPlaying = false;
+    stopRequested = true;
+};
+
+speechSynthesis.onresume = () => {
+    console.log("Speech resumed");
+};
 
 
 
