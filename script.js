@@ -697,9 +697,9 @@ document.addEventListener('DOMContentLoaded', () => {
             XLSX.writeFile(workbook, "template.xlsx");
         });
     }
-
-    loadVoices();
-    loadVoicesWithDelay(); // <-- ახალი ფუნქცია
+    //
+    // loadVoices();
+    // loadVoicesWithDelay(); // <-- ახალი ფუნქცია
 
     if (stored) {
         const data = JSON.parse(stored);
@@ -738,7 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 1. გავაუქმოთ ყველა მიმდინარე წაკითხვა
-        // window.speechSynthesis.cancel();
+        window.speechSynthesis.cancel();
 
         // 2. მცირე დაყოვნება, რომ cancel მუშაობდეს სრულად
         setTimeout(() => {
