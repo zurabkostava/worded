@@ -676,6 +676,8 @@ closeSidebarBtn.onclick = () => {
 
 // ==== გადმოტვირთვა localStorage-დან ====
 document.addEventListener('DOMContentLoaded', () => {
+
+
     const closeBtn = document.getElementById('closePreviewBtn');
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
@@ -698,10 +700,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    window.speechSynthesis.onvoiceschanged = () => {
+    setTimeout(() => {
         loadVoices();
-        loadVoicesWithDelay?.(); // თუ გაქვს
-    };
+        loadVoicesWithDelay();
+    }, 500); // ან მეტი, თუ Edge-ში პრობლემაა
+
 
     if (stored) {
         const data = JSON.parse(stored);
