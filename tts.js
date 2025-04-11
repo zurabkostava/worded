@@ -180,33 +180,3 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
-let wakeLock = null;
-
-async function requestWakeLock() {
-    try {
-        wakeLock = await navigator.wakeLock.request('screen');
-        console.log('🔒 Wake Lock active');
-    } catch (err) {
-        console.error('Wake Lock error:', err);
-    }
-}
-
-document.addEventListener('visibilitychange', () => {
-    if (wakeLock !== null && document.visibilityState === 'visible') {
-        requestWakeLock(); // თავიდან მოითხოვე
-    }
-});
-playBtn.onclick = () => {
-    if (isPlaying) return;
-    isPlaying = true;
-    stopRequested = false;
-    previewManuallyClosed = false;
-    playBtn.classList.add('active');
-
-    requestWakeLock(); // ✅
-
-    startAutoPlay().then(() => {
-        isPlaying = false;
-        playBtn.classList.remove('active');
-    });
-};
