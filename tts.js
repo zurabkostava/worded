@@ -10,6 +10,14 @@ let selectedGeorgianVoice = null;
 let isSpeaking = false;
 let lastSpokenButton = null;
 
+// ======== NEW: Detect Edge on Android and disable TTS =========
+const isEdgeAndroid = /EdgA\/[.\d]+/.test(navigator.userAgent);
+if (isEdgeAndroid) {
+    console.warn("Edge Android detected – Disabling custom TTS to allow Read Aloud.");
+    window.speechSynthesis = null; // Disable custom TTS logic
+}
+// ===============================================================
+
 const allowedVoicesEnglish = [
     "Microsoft AndrewMultilingual Online (Natural) - English (United States)",
     "Microsoft AvaMultilingual Online (Natural) - English (United States)",
@@ -45,6 +53,7 @@ function loadSpeechRates() {
 }
 
 function populateVoiceDropdown() {
+    if (!window.speechSynthesis) return;
     const voices = speechSynthesis.getVoices();
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.innerHTML = '';
@@ -65,6 +74,7 @@ function populateVoiceDropdown() {
 }
 
 function populateGeorgianDropdown() {
+    if (!window.speechSynthesis) return;
     const voices = speechSynthesis.getVoices();
     const geoSelect = document.getElementById('georgianVoiceSelect');
     geoSelect.innerHTML = '';
@@ -85,6 +95,7 @@ function populateGeorgianDropdown() {
 }
 
 function loadVoices() {
+    if (!window.speechSynthesis) return;
     const voices = speechSynthesis.getVoices();
     populateVoiceDropdown();
     populateGeorgianDropdown();
@@ -97,6 +108,7 @@ function loadVoices() {
 }
 
 function loadVoicesWithDelay(retry = 0) {
+    if (!window.speechSynthesis) return;
     const voices = speechSynthesis.getVoices();
     if (voices.length > 0 || retry >= 10) {
         loadVoices();
@@ -105,7 +117,9 @@ function loadVoicesWithDelay(retry = 0) {
     setTimeout(() => loadVoicesWithDelay(retry + 1), 200);
 }
 
-speechSynthesis.onvoiceschanged = loadVoices;
+if (window.speechSynthesis) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+}
 
 function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
     if (!window.speechSynthesis || !voiceObj) return;
@@ -161,6 +175,8 @@ function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highl
 }
 
 document.addEventListener('click', (e) => {
+    if (!window.speechSynthesis) return;
+
     const speakBtn = e.target.closest('.speak-btn');
     if (!speakBtn) return;
 
