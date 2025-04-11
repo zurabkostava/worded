@@ -137,22 +137,31 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
 
             utterance.rate = rate;
 
-            // 🔦 Highlight დაწყება
+            if (buttonEl) buttonEl.classList.add('active');
             if (el) el.classList.add('highlighted-sentence');
 
-            utterance.onend = () => {
-                // 🔦 Highlight მოცილება
-                if (el) el.classList.remove('highlighted-sentence');
+            // ✅ Fallback ტაიმერი – თუ onend არ მოხდება
+            const MAX_SPEAK_DURATION = 10000; // 10 წამი
+            const timeout = setTimeout(() => {
+                console.warn('⏰ speechSynthesis timeout!');
+                speechSynthesis.cancel(); // გააუქმებს წაკითხვას
                 if (buttonEl) buttonEl.classList.remove('active');
+                if (el) el.classList.remove('highlighted-sentence');
+                resolve();
+            }, MAX_SPEAK_DURATION);
+
+            utterance.onend = () => {
+                clearTimeout(timeout); // ❌ ტაიმერი არ გაგვიძღვეს
+                if (buttonEl) buttonEl.classList.remove('active');
+                if (el) el.classList.remove('highlighted-sentence');
+                lastSpokenButton = null;
                 resolve();
             };
-
-            // გააქტიურე ღილაკიც
-            if (buttonEl) buttonEl.classList.add('active');
 
             speechSynthesis.speak(utterance);
         });
     };
+
 
     await speak(text, highlightEl);
 
@@ -180,4 +189,3 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
- 
