@@ -672,42 +672,11 @@ closeSidebarBtn.onclick = () => {
 };
 
 
-function loadVoicesSafely() {
-    return new Promise(resolve => {
-        let voices = speechSynthesis.getVoices();
-        if (voices.length) {
-            resolve(voices);
-            return;
-        }
-
-        // თუ ჯერ არ არის მზად, დავიცადოთ
-        speechSynthesis.onvoiceschanged = () => {
-            voices = speechSynthesis.getVoices();
-            resolve(voices);
-        };
-
-        // fallback 2 წამში მაინც გააგრძელოს
-        setTimeout(() => {
-            resolve(speechSynthesis.getVoices());
-        }, 2000);
-    });
-}
-
-async function loadVoicesWithFallback() {
-    const voices = await loadVoicesSafely();
-
-    // აირჩიე default თუ შენარჩულებული ხმა არაა
-    selectedVoice = voices.find(v => v.lang.startsWith('en')) || voices[0];
-    selectedGeorgianVoice = voices.find(v => v.lang === 'ka-GE') || voices.find(v => v.lang.startsWith('ka')) || selectedVoice;
-
-    // თუ გინდა dropdown-ებიც ამოავსოს
-    populateVoiceDropdown?.();
-}
 
 
 // ==== გადმოტვირთვა localStorage-დან ====
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadVoicesWithFallback(); // ← ეს ჩატვირთავს ხმებს უსაფრთხოდ
+document.addEventListener('DOMContentLoaded', () => {
+
 
     const closeBtn = document.getElementById('closePreviewBtn');
     const previewModal = document.getElementById('cardPreviewModal');
@@ -743,7 +712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         voicesLoaded = true;
     }
 
-    document.addEventListener('click', safeLoadVoices, {once: true}); // მხოლოდ ერთხელ
+    document.addEventListener('click', safeLoadVoices, { once: true }); // მხოლოდ ერთხელ
 
 
     if (stored) {
@@ -775,6 +744,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
 
+
     function speakWord(text) {
         if (!window.speechSynthesis) {
             alert('SpeechSynthesis არ არის ხელმისაწვდომი თქვენს ბრაუზერში');
@@ -801,6 +771,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
+
+
     document.addEventListener('click', e => {
         if (e.target.classList.contains('card-tag')) {
             const tag = e.target.textContent.replace('#', '');
@@ -825,7 +797,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
 
-    document.addEventListener('click', function (e) {
+    document.addEventListener('click', function(e) {
         const tagInputFocused = tagInput.contains(e.target);
         const dropdownFocused = tagDropdown.contains(e.target);
 
@@ -881,6 +853,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     populateGlobalTags();
+
 
 
 });
