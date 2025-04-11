@@ -702,10 +702,28 @@ addReminderBtn.onclick = () => {
         return;
     }
 
-    reminders.push({ time, days, tag, excludeMastered });
+    const newReminder = { time, days, tag, excludeMastered };
+
+    if (editingReminderIndex !== -1) {
+        reminders[editingReminderIndex] = newReminder;
+        editingReminderIndex = -1;
+        addReminderBtn.textContent = '➕ დამატება';
+    } else {
+        reminders.push(newReminder);
+    }
+
     localStorage.setItem("reminders", JSON.stringify(reminders));
     renderReminders();
+    clearReminderForm();
 };
+
+
+function clearReminderForm() {
+    reminderTimeInput.value = '';
+    document.querySelectorAll('.weekday-checkboxes input').forEach(cb => cb.checked = false);
+    document.getElementById('notificationTagFilter').value = '';
+    document.getElementById('excludeMasteredCheckbox').checked = false;
+}
 
 
 function renderReminders() {
@@ -718,11 +736,33 @@ function renderReminders() {
         if (reminder.tag) extra.push(`#${reminder.tag}`);
         if (reminder.excludeMastered) extra.push("− ნასწავლი");
 
-        li.innerHTML = `${reminder.time} — ${days} ${extra.length ? `(${extra.join(', ')})` : ''}
- <button onclick="removeReminder(${index})">წაშლა</button>`;
+        li.innerHTML = `
+  ${reminder.time} — ${days} ${extra.length ? `(${extra.join(', ')})` : ''}
+  <button onclick="editReminder(${index})">✏ რედ.</button>
+  <button onclick="removeReminder(${index})">წაშლა</button>
+`;
+
         reminderList.appendChild(li);
     });
 }
+let editingReminderIndex = -1;
+
+window.editReminder = function(index) {
+    const reminder = reminders[index];
+    reminderTimeInput.value = reminder.time;
+
+    // მონიშნე შესაბამისი კვირის checkbox-ები
+    document.querySelectorAll('.weekday-checkboxes input').forEach(cb => {
+        cb.checked = reminder.days.includes(parseInt(cb.value));
+    });
+
+    // მონიშნე თეგი
+    document.getElementById('notificationTagFilter').value = reminder.tag || '';
+    document.getElementById('excludeMasteredCheckbox').checked = reminder.excludeMastered || false;
+
+    editingReminderIndex = index;
+    addReminderBtn.textContent = '🔄 განახლება';
+};
 
 function populateNotificationTags() {
     const select = document.getElementById('notificationTagFilter');
