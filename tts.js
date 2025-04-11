@@ -137,31 +137,22 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
 
             utterance.rate = rate;
 
-            if (buttonEl) buttonEl.classList.add('active');
+            // 🔦 Highlight დაწყება
             if (el) el.classList.add('highlighted-sentence');
 
-            // ✅ Fallback ტაიმერი – თუ onend არ მოხდება
-            const MAX_SPEAK_DURATION = 10000; // 10 წამი
-            const timeout = setTimeout(() => {
-                console.warn('⏰ speechSynthesis timeout!');
-                speechSynthesis.cancel(); // გააუქმებს წაკითხვას
-                if (buttonEl) buttonEl.classList.remove('active');
-                if (el) el.classList.remove('highlighted-sentence');
-                resolve();
-            }, MAX_SPEAK_DURATION);
-
             utterance.onend = () => {
-                clearTimeout(timeout); // ❌ ტაიმერი არ გაგვიძღვეს
-                if (buttonEl) buttonEl.classList.remove('active');
+                // 🔦 Highlight მოცილება
                 if (el) el.classList.remove('highlighted-sentence');
-                lastSpokenButton = null;
+                if (buttonEl) buttonEl.classList.remove('active');
                 resolve();
             };
+
+            // გააქტიურე ღილაკიც
+            if (buttonEl) buttonEl.classList.add('active');
 
             speechSynthesis.speak(utterance);
         });
     };
-
 
     await speak(text, highlightEl);
 
@@ -189,3 +180,33 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
+let wakeLock = null;
+
+async function requestWakeLock() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        console.log('🔒 Wake Lock active');
+    } catch (err) {
+        console.error('Wake Lock error:', err);
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock(); // თავიდან მოითხოვე
+    }
+});
+playBtn.onclick = () => {
+    if (isPlaying) return;
+    isPlaying = true;
+    stopRequested = false;
+    previewManuallyClosed = false;
+    playBtn.classList.add('active');
+
+    requestWakeLock(); // ✅
+
+    startAutoPlay().then(() => {
+        isPlaying = false;
+        playBtn.classList.remove('active');
+    });
+};
