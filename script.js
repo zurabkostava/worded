@@ -671,6 +671,138 @@ closeSidebarBtn.onclick = () => {
     sidebar.classList.remove('active');
 };
 
+const notificationsBtn = document.getElementById('notificationsBtn');
+const notificationsModal = document.getElementById('notificationsModal');
+const closeNotificationsBtn = document.getElementById('closeNotificationsBtn');
+const reminderTimeInput = document.getElementById('reminderTimeInput');
+const addReminderBtn = document.getElementById('addReminderBtn');
+const reminderList = document.getElementById('reminderList');
+
+let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+
+notificationsBtn.onclick = () => {
+    renderReminders();
+    notificationsModal.style.display = 'flex';
+    populateNotificationTags();
+
+};
+
+closeNotificationsBtn.onclick = () => {
+    notificationsModal.style.display = 'none';
+};
+
+addReminderBtn.onclick = () => {
+    const time = reminderTimeInput.value;
+    const days = [...document.querySelectorAll('.weekday-checkboxes input:checked')].map(cb => parseInt(cb.value));
+    const tag = document.getElementById("notificationTagFilter").value;
+    const excludeMastered = document.getElementById("excludeMasteredCheckbox").checked;
+
+    if (!time || days.length === 0) {
+        alert("აირჩიე დრო და კვირის დღეები!");
+        return;
+    }
+
+    reminders.push({ time, days, tag, excludeMastered });
+    localStorage.setItem("reminders", JSON.stringify(reminders));
+    renderReminders();
+};
+
+
+function renderReminders() {
+    reminderList.innerHTML = '';
+    reminders.forEach((reminder, index) => {
+        const li = document.createElement('li');
+        const dayNames = ['კვ.', 'ორშ.', 'სამშ.', 'ოთხშ.', 'ხუთშ.', 'პარ.', 'შაბ.'];
+        const days = reminder.days.map(d => dayNames[d]).join(', ');
+        const extra = [];
+        if (reminder.tag) extra.push(`#${reminder.tag}`);
+        if (reminder.excludeMastered) extra.push("− ნასწავლი");
+
+        li.innerHTML = `${reminder.time} — ${days} ${extra.length ? `(${extra.join(', ')})` : ''}
+ <button onclick="removeReminder(${index})">წაშლა</button>`;
+        reminderList.appendChild(li);
+    });
+}
+
+function populateNotificationTags() {
+    const select = document.getElementById('notificationTagFilter');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">ყველა თეგი</option>';
+    [...allTags].sort().forEach(tag => {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        opt.textContent = tag;
+        select.appendChild(opt);
+    });
+}
+
+window.removeReminder = function(index) {
+    reminders.splice(index, 1);
+    localStorage.setItem("reminders", JSON.stringify(reminders));
+    renderReminders();
+};
+
+setInterval(() => {
+    const now = new Date();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const currentTime = `${hours}:${minutes}`;
+    const currentDay = now.getDay();
+
+    reminders.forEach(reminder => {
+        if (reminder.time === currentTime && reminder.days.includes(currentDay)) {
+            const cards = [...document.querySelectorAll('.card')];
+
+            let filtered = cards;
+            if (reminder.tag) {
+                filtered = filtered.filter(card =>
+                    [...card.querySelectorAll('.card-tag')]
+                        .some(span => span.textContent.replace('#', '') === reminder.tag)
+                );
+            }
+            if (reminder.excludeMastered) {
+                filtered = filtered.filter(card => parseFloat(card.dataset.progress || '0') < 100);
+            }
+
+            if (filtered.length > 0) {
+                const randomCard = filtered[Math.floor(Math.random() * filtered.length)];
+                const word = randomCard.querySelector('.word').textContent;
+                const translation = randomCard.querySelector('.translation').textContent;
+                sendNotification(`📖 ${word} — ${translation}`);
+            } else {
+                sendNotification("📚 დროა გაიმეორო, მაგრამ სიტყვა ვერ მოიძებნა ამ პირობებით.");
+            }
+        }
+    });
+
+}, 60 * 1000);
+
+
+function sendNotification(text = null) {
+    const stored = localStorage.getItem("english_cards_app");
+    const data = stored ? JSON.parse(stored) : null;
+
+    let message = "📚 დროა გაიმეორო სიტყვები!";
+
+    if (data && data.cards?.length) {
+        const randomIndex = Math.floor(Math.random() * data.cards.length);
+        const card = data.cards[randomIndex];
+        const translation = (card.mainTranslations || []).join(', ');
+        message = `✨ ${card.word} — ${translation}`;
+    }
+
+    if (Notification.permission === "granted") {
+        new Notification(text || message);
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification(text || message);
+            }
+        });
+    }
+}
+
 
 
 
