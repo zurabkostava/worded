@@ -30,3 +30,14 @@ self.addEventListener('fetch', event => {
         caches.match(event.request).then(resp => resp || fetch(event.request))
     );
 });
+self.addEventListener('push', function(event) {
+  const data = event.data?.json() || { title: 'Word Reminder', body: 'Time to review!' };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icons/icon-192.png',
+      tag: 'word-reminder'
+    })
+  );
+});
