@@ -176,15 +176,3 @@ document.addEventListener('click', (e) => {
         speakWithVoice(text, selectedVoice, speakBtn);
     }
 });
-const p = document.createElement('p');
-p.textContent = 'This is a sentence for Read Aloud';
-document.body.appendChild(p);
-window.addEventListener('load', () => {
-    document.body.setAttribute('aria-hidden', 'false');
-});
-const visibleClone = document.createElement('div');
-visibleClone.textContent = yourText;
-visibleClone.style.position = 'absolute';
-visibleClone.style.opacity = '0.01';
-visibleClone.style.pointerEvents = 'none';
-document.body.appendChild(visibleClone);
