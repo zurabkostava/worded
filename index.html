@@ -25,8 +25,7 @@
     </script>
     <script defer="" src="puzzle.js">
     </script>
-    <script src="tts.js" defer></script>
-
+    <script src="tts.js"></script>
 
     <!-- შენიშნე, რომ ორი ახალი ფუნქცია დაგვჭირდება:
             getDocs, doc, setDoc, deleteDoc -->
@@ -308,6 +307,7 @@
         <div class="toolbar-center">
         </div>
         <div class="toolbar-right">
+            <button id="notificationsBtn" class="toolbar-btn"><i class="fa-regular fa-bell"></i></button>
 
 
             <button class="toolbar-btn" id="statsBtn" title="სტატისტიკა">
@@ -318,10 +318,6 @@
         </div>
     </div>
 </div>
-
-
-<div id="readerText" aria-live="polite">Hello, world</div>
-
 <div class="card-container" id="cardContainer">
     <!-- დინამიური ქარდები ჩნდება აქ -->
 </div>
@@ -594,6 +590,8 @@
                 </input>
 
 
+
+
             </div>
         </div>
         <div class="modal-actions" style="margin-top: 20px;">
@@ -794,5 +792,61 @@
         </div>
     </div>
 </div>
+
+
+<div class="modal-overlay" id="notificationsModal" style="display:none;">
+    <div class="modal" style="max-width: 500px;">
+        <div class="modal-actions close-modal">
+            <button class="close-button" id="closeNotificationsBtn">×</button>
+        </div>
+        <h2>შეტყობინებები</h2>
+
+        <div class="input-container">
+            <label class="material-input">
+                <input type="time" id="reminderTimeInput" required>
+                <span>შეიყვანე დრო</span>
+            </label>
+        </div>
+
+        <div class="weekday-checkboxes" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+            <label><input type="checkbox" value="1"> ორშ.</label>
+            <label><input type="checkbox" value="2"> სამშ.</label>
+            <label><input type="checkbox" value="3"> ოთხშ.</label>
+            <label><input type="checkbox" value="4"> ხუთშ.</label>
+            <label><input type="checkbox" value="5"> პარ.</label>
+            <label><input type="checkbox" value="6"> შაბ.</label>
+            <label><input type="checkbox" value="0"> კვ.</label>
+
+        </div>
+
+
+        <div class="input-container">
+            <label class="material-input material-select">
+                <select id="notificationTagFilter">
+                    <option value="">ყველა თეგი</option>
+                    <!-- დინამიურად დაემატება -->
+                </select>
+                <span>აირჩიე თეგი</span>
+                <i class="fas fa-chevron-down select-arrow-icon"></i>
+            </label>
+        </div>
+
+        <label style="display: flex; align-items: center; justify-content: center; width: 40%; height: 30px; margin: 0 auto; cursor: pointer">
+
+
+            <input style="width: auto; margin-right: 10px" type="checkbox" id="excludeMasteredCheckbox" />
+            - ნასწავლი
+        </label>
+
+        <button id="addReminderBtn" style="margin-bottom: 15px;">➕ დამატება</button>
+
+        <ul id="reminderList"></ul>
+
+
+
+    </div>
+</div>
+
+
 </body>
 </html>
