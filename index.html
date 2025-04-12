@@ -27,34 +27,35 @@
     </script>
     <script defer="" src="service-worker.js">
     </script><script defer="" src="firebase-messaging-sw.js">
-    </script>
+</script>
     <script src="tts.js"></script>
     <link rel="manifest" href="/manifest.json">
     <script>
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/firebase-messaging-sw.js')
-                .then((registration) => {
-                    console.log('✔ Firebase Messaging SW რეგისტრირებულია');
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
 
-                    const messaging = getMessaging(app);
+        const messaging = getMessaging(app);
 
-                    getToken(messaging, {
-                        vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves",
-                        serviceWorkerRegistration: registration
-                    }).then((currentToken) => {
-                        if (currentToken) {
-                            console.log('🔐 ტოკენი:', currentToken);
-                            localStorage.setItem("fcmToken", currentToken);
-                        } else {
-                            console.warn("❌ ტოკენი ვერ მოიპოვა. ნებართვა მოთხოვნილია?");
-                        }
-                    }).catch((err) => {
-                        console.error("💥 Token მიღების შეცდომა:", err);
-                    });
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+            .then((registration) => {
+                console.log('✅ Firebase Messaging SW რეგისტრირებულია');
+
+                return getToken(messaging, {
+                    vapidKey: 'BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves',
+                    serviceWorkerRegistration: registration
                 });
-
-        }
+            })
+            .then((token) => {
+                if (token) {
+                    console.log('🔐 მიღებული ტოკენი:', token);
+                    localStorage.setItem('fcmToken', token);
+                } else {
+                    console.warn('❌ ტოკენი ვერ მოიძებნა. ნებართვა მიღებულია?');
+                }
+            })
+            .catch((err) => {
+                console.error('💥 ტოკენის მიღების შეცდომა:', err);
+            });
 
     </script>
 
