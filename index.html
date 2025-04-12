@@ -43,7 +43,7 @@
         import {
             initializeApp
         } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
         import {
             getFirestore,
             collection,
@@ -66,9 +66,21 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const messaging = getMessaging(app);
+
 
         document.getElementById("pullFromFirestoreBtn").addEventListener("click", pullAllCardsFromFirebase);
 
+
+        getToken(messaging, { vapidKey: '385741553786' }).then((currentToken) => {
+            if (currentToken) {
+                console.log("✅ Token:", currentToken);
+            } else {
+                console.warn('❌ Token-ის მიღება ვერ მოხერხდა.');
+            }
+        }).catch((err) => {
+            console.error('❌ FCM token შეცდომა:', err);
+        });
         async function pullAllCardsFromFirebase() {
             try {
                 const snapshot = await getDocs(collection(db, "cards"));
