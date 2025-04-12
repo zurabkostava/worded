@@ -35,15 +35,25 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/firebase-messaging-sw.js')
                 .then((registration) => {
-                    console.log('📩 Firebase Messaging SW რეგისტრირებულია');
+                    console.log('✔ Firebase Messaging SW რეგისტრირებულია');
+
+                    const messaging = getMessaging(app);
 
                     getToken(messaging, {
                         vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves",
                         serviceWorkerRegistration: registration
-                    }).then((token) => {
-                        console.log("📲 FCM ტოკენი:", token);
+                    }).then((currentToken) => {
+                        if (currentToken) {
+                            console.log('🔐 ტოკენი:', currentToken);
+                            localStorage.setItem("fcmToken", currentToken);
+                        } else {
+                            console.warn("❌ ტოკენი ვერ მოიპოვა. ნებართვა მოთხოვნილია?");
+                        }
+                    }).catch((err) => {
+                        console.error("💥 Token მიღების შეცდომა:", err);
                     });
                 });
+
         }
 
     </script>
@@ -76,6 +86,7 @@
         };
 
 
+        import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
