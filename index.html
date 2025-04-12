@@ -26,15 +26,26 @@
     <script defer="" src="puzzle.js">
     </script>
     <script defer="" src="service-worker.js">
+    </script><script defer="" src="firebase-messaging-sw.js">
     </script>
     <script src="tts.js"></script>
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="manifest.json">
     <script>
+
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(() => console.log("✅ Service Worker რეგისტრირებულია"))
-                .catch(err => console.error("❌ SW error:", err));
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                .then((registration) => {
+                    console.log('📩 Firebase Messaging SW რეგისტრირებულია');
+
+                    getToken(messaging, {
+                        vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves",
+                        serviceWorkerRegistration: registration
+                    }).then((token) => {
+                        console.log("📲 FCM ტოკენი:", token);
+                    });
+                });
         }
+
     </script>
 
     <!-- შენიშნე, რომ ორი ახალი ფუნქცია დაგვჭირდება:
