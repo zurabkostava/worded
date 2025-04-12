@@ -826,30 +826,32 @@ function sendNotification(text = null) {
     const stored = localStorage.getItem("english_cards_app");
     const data = stored ? JSON.parse(stored) : null;
 
-    let message = "📚 დროა გაიმეორო სიტყვები!";
-
     if (data && data.cards?.length) {
         const randomIndex = Math.floor(Math.random() * data.cards.length);
         const card = data.cards[randomIndex];
-        const translation = (card.mainTranslations || []).join(', ');
-        message = `✨ ${card.word} — ${translation}`;
-    }
 
-    // ❌ ეს არ მუშაობს სწორად:
-    // new Notification(text || message);
+        const mainTranslation = (card.mainTranslations || []).join(', ');
+        const extraTranslation = (card.extraTranslations?.length)
+            ? `(${card.extraTranslations.join(', ')})`
+            : '';
 
-    // ✅ გამოიყენე ეს:
-    if ('serviceWorker' in navigator) {
         navigator.serviceWorker.ready.then(function(reg) {
-            reg.showNotification("შეხსენება 🔔", {
-                body: text || message,
+            reg.showNotification(card.word, {
+                body: mainTranslation + (extraTranslation ? `\n${extraTranslation}` : ''),
                 icon: "/icons/icon-192.png"
             });
         });
     } else {
-        console.warn("Service Worker არ არის მხარდაჭერილი.");
+        // თუ სიტყვები არაა, უბრალოდ გამოიტანე ზოგადი ტექსტი
+        navigator.serviceWorker.ready.then(function(reg) {
+            reg.showNotification("📚 შეხსენება", {
+                body: text || "დროა გაიმეორო სიტყვები!",
+                icon: "/icons/icon-192.png"
+            });
+        });
     }
 }
+
 
 
 
