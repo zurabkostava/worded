@@ -1,13 +1,13 @@
 {
-  "name": "English Learning Cards",
+  "name": "English Cards App",
   "short_name": "Worded",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "theme_color": "#1a73e8",
   "icons": [
     {
-      "src": "/icon.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     }
