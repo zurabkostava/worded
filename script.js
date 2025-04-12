@@ -869,16 +869,12 @@ if (window.innerWidth <= 768) {
 
 
 
-
 // ==== გადმოტვირთვა localStorage-დან ====
 document.addEventListener('DOMContentLoaded', () => {
-
-
     const closeBtn = document.getElementById('closePreviewBtn');
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
-
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
@@ -897,20 +893,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // loadVoices();
-    // loadVoicesWithDelay(); // <-- ახალი ფუნქცია
-
-    let voicesLoaded = false;
-
-    function safeLoadVoices() {
-        if (voicesLoaded) return;
-        loadVoices();
-        loadVoicesWithDelay();
-        voicesLoaded = true;
-    }
-
-    document.addEventListener('click', safeLoadVoices, { once: true }); // მხოლოდ ერთხელ
-
+    loadVoices();
+    loadVoicesWithDelay(); // <-- ახალი ფუნქცია
 
     if (stored) {
         const data = JSON.parse(stored);
@@ -1083,16 +1067,7 @@ document.querySelectorAll('.training-tab').forEach(tab => {
 
 
 
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        navigator.serviceWorker.ready.then(function(reg) {
-            reg.showNotification("ტესტი Android-ზე", {
-                body: "თუ ხედავ ამას, მუშაობს",
-                icon: "/icons/icon-192.png"
-            });
-        });
-    }, 5000);
-});
+
 
 // ==== თარგმანების დამატება ====
 addMainTranslationBtn.onclick = () => addTranslation(mainTranslationInput, mainTranslations, mainTranslationTags);
@@ -1554,18 +1529,7 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
             if (buttonEl) buttonEl.classList.add('active');
             if (el) el.classList.add('highlighted-sentence');
 
-            // ✅ Fallback ტაიმერი – თუ onend არ მოხდება
-            const MAX_SPEAK_DURATION = 10000; // 10 წამი
-            const timeout = setTimeout(() => {
-                console.warn('⏰ speechSynthesis timeout!');
-                speechSynthesis.cancel(); // გააუქმებს წაკითხვას
-                if (buttonEl) buttonEl.classList.remove('active');
-                if (el) el.classList.remove('highlighted-sentence');
-                resolve();
-            }, MAX_SPEAK_DURATION);
-
             utterance.onend = () => {
-                clearTimeout(timeout); // ❌ ტაიმერი არ გაგვიძღვეს
                 if (buttonEl) buttonEl.classList.remove('active');
                 if (el) el.classList.remove('highlighted-sentence');
                 lastSpokenButton = null;
@@ -1575,7 +1539,6 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
             speechSynthesis.speak(utterance);
         });
     };
-
 
     speechSynthesis.cancel();
     await delay(100);
@@ -1609,15 +1572,6 @@ async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null,
 
 
 
-speechSynthesis.onpause = () => {
-    console.log("Speech paused (maybe screen locked)");
-    isPlaying = false;
-    stopRequested = true;
-};
-
-speechSynthesis.onresume = () => {
-    console.log("Speech resumed");
-};
 
 
 
@@ -2138,39 +2092,44 @@ function updateSelectionUI() {
 function addLongPressHandlers(card) {
     let pressTimer = null;
     let preventClick = false;
-    const longPressDuration = 600;
+
+    const longPressDuration = 600; // 600ms
 
     const onPointerDown = (e) => {
+        // ტრადიციული mouse-ისთვის თუ e.button !== 0 -> გასვლა
         if (e.pointerType === 'mouse' && e.button !== 0) return;
 
+        // ლონგ პრესის ტაიმერი
         pressTimer = setTimeout(() => {
             preventClick = true;
             selectionMode = true;
             selectCard(card);
             showCancelButton();
         }, longPressDuration);
-
-        card.setPointerCapture(e.pointerId);
     };
 
-    const clearPressTimer = () => {
+    const onPointerUpOrLeave = (e) => {
         if (pressTimer) {
             clearTimeout(pressTimer);
             pressTimer = null;
         }
     };
 
-    const onPointerUp = (e) => {
-        clearPressTimer();
-        card.releasePointerCapture(e.pointerId);
-    };
-
+    // Pointer events
     card.addEventListener('pointerdown', onPointerDown);
-    card.addEventListener('pointerup', onPointerUp);
-    card.addEventListener('pointercancel', clearPressTimer);
-    card.addEventListener('pointerleave', clearPressTimer);
-    card.addEventListener('pointermove', clearPressTimer);
+    card.addEventListener('pointerup', onPointerUpOrLeave);
+    card.addEventListener('pointerleave', onPointerUpOrLeave);
+    card.addEventListener('pointercancel', onPointerUpOrLeave);
 
+    // თუ user აბრუნებს თითს ან ა.შ.
+    card.addEventListener('pointermove', () => {
+        if (pressTimer) {
+            clearTimeout(pressTimer);
+            pressTimer = null;
+        }
+    });
+
+    // click
     card.addEventListener('click', (e) => {
         if (preventClick) {
             preventClick = false;
