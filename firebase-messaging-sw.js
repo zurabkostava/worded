@@ -1,5 +1,7 @@
 importScripts('https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js');
 
 firebase.initializeApp({
     apiKey: "AIzaSyArftPeH-SoIwmm2aKLDHBTE8M4DQ5jLM8",
@@ -14,14 +16,13 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage(function(payload) {
-    console.log('📥 [firebase-messaging-sw.js] Background msg:', payload);
+    console.log('[firebase-messaging-sw.js] Background message:', payload);
 
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
         body: payload.notification.body,
-        // icon: '/icons/icon-192.png' // optional
+        // icon: '/icon.png'
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
- 
