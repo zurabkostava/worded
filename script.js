@@ -852,6 +852,19 @@ function sendNotification(text = null) {
     }
 }
 
+if (window.innerWidth <= 768) {
+    document.addEventListener('click', function (e) {
+        const topBar = document.querySelector('.top');
+        const toggleBtn = document.getElementById('showTopBtn');
+
+        const clickedInsideTopBar = topBar.contains(e.target);
+        const clickedToggleBtn = toggleBtn.contains(e.target);
+
+        if (!clickedInsideTopBar && !clickedToggleBtn) {
+            topBar.classList.remove('show');
+        }
+    });
+}
 
 
 
@@ -2125,44 +2138,39 @@ function updateSelectionUI() {
 function addLongPressHandlers(card) {
     let pressTimer = null;
     let preventClick = false;
-
-    const longPressDuration = 600; // 600ms
+    const longPressDuration = 600;
 
     const onPointerDown = (e) => {
-        // ტრადიციული mouse-ისთვის თუ e.button !== 0 -> გასვლა
         if (e.pointerType === 'mouse' && e.button !== 0) return;
 
-        // ლონგ პრესის ტაიმერი
         pressTimer = setTimeout(() => {
             preventClick = true;
             selectionMode = true;
             selectCard(card);
             showCancelButton();
         }, longPressDuration);
+
+        card.setPointerCapture(e.pointerId);
     };
 
-    const onPointerUpOrLeave = (e) => {
+    const clearPressTimer = () => {
         if (pressTimer) {
             clearTimeout(pressTimer);
             pressTimer = null;
         }
     };
 
-    // Pointer events
+    const onPointerUp = (e) => {
+        clearPressTimer();
+        card.releasePointerCapture(e.pointerId);
+    };
+
     card.addEventListener('pointerdown', onPointerDown);
-    card.addEventListener('pointerup', onPointerUpOrLeave);
-    card.addEventListener('pointerleave', onPointerUpOrLeave);
-    card.addEventListener('pointercancel', onPointerUpOrLeave);
+    card.addEventListener('pointerup', onPointerUp);
+    card.addEventListener('pointercancel', clearPressTimer);
+    card.addEventListener('pointerleave', clearPressTimer);
+    card.addEventListener('pointermove', clearPressTimer);
 
-    // თუ user აბრუნებს თითს ან ა.შ.
-    card.addEventListener('pointermove', () => {
-        if (pressTimer) {
-            clearTimeout(pressTimer);
-            pressTimer = null;
-        }
-    });
-
-    // click
     card.addEventListener('click', (e) => {
         if (preventClick) {
             preventClick = false;
