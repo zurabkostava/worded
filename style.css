@@ -195,6 +195,7 @@ body.dark #toggleDarkModeBtn:hover {
 .dark .top {
     background-color: #1e1e1e;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+
 }
 
 .clear-tags-btn {
@@ -313,12 +314,12 @@ body.dark #toggleDarkModeBtn:hover {
     gap: 8px;
     position: absolute;
     transform: translateX(-20px);
-    width: 109%;
+    width: 116%;
     bottom: -8px;
 }
 
 .progress-label{
-    transform: translate(-45px, -20px);
+    transform: translate(-70px, -20px);
 }
 .sen-option.correct {
     background-color: #4caf50 !important; /* მწვანე */
@@ -2222,6 +2223,20 @@ textarea {
     background-color: #005fa3;
 }
 
+.card {
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.mobile-tittle{
+    position: fixed;
+    margin-top: 10px;
+    z-index: 9999999999999999999;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%)
+}
 
 @media (max-width: 768px) {
     .preview-modal{
@@ -2237,16 +2252,26 @@ textarea {
         display: block; /* მხოლოდ მობილურზე გამოჩნდეს */
     }
     .top {
-        display: none;
-        transition: all ease-in-out 0.3s;
-
-
+        opacity: 0;
+        transform: translateY(-100%);
+        pointer-events: none;
+        filter: drop-shadow(3px 27px 35px #000000);
+        transition: all 0.2s ease-in-out;
+    }
+    #notificationsModal{
+        z-index: 9999999999999!important;
     }
 
+    .top-left{
+        display: none;
+    }
 
     .top.show {
-        display: block;
-        z-index: 99999;
+        opacity: 1;
+        transform: translateY(50px);
+        pointer-events: auto;
+        outline: 2px solid gray;
+        padding: 4px;
     }
     .top-right{
         justify-content: center;
@@ -2258,7 +2283,7 @@ textarea {
     }
 
     .card-container{
-        margin-top: 40px;
+        transform: translatey(-130px);
     }
 
     #toggleSidebarBtn{
@@ -2345,6 +2370,10 @@ textarea {
         font-size: 1.5rem;
     }
 
+    .progress-label{
+        transform: translate(-140px, -30px);
+    }
+
     .dark .training-close{
         position: absolute;
         top: 5px;
@@ -2415,3 +2444,8 @@ textarea {
 
 }
 
+@media (max-width: 600px) {
+    .progress-label{
+        transform: translate(-94px, -30px);
+    }
+}
