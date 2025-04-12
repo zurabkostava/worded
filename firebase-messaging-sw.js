@@ -1,5 +1,7 @@
-importScripts('https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging-compat.js');
+// firebase-messaging-sw.js
+
+importScripts("https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js");
+importScripts("https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging-compat.js");
 
 firebase.initializeApp({
     apiKey: "AIzaSyArftPeH-SoIwmm2aKLDHBTE8M4DQ5jLM8",
@@ -13,13 +15,13 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage(function(payload) {
-    console.log('[firebase-messaging-sw.js] მიღებულია Background Message:', payload);
+messaging.onBackgroundMessage((payload) => {
+    console.log("[🔥 BG Message]:", payload);
 
     const notificationTitle = payload.notification.title;
     const notificationOptions = {
         body: payload.notification.body,
-        // icon: '/icon.png'
+        icon: '/icons/icon-192.png'
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
