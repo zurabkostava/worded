@@ -784,6 +784,8 @@ window.removeReminder = function(index) {
     renderReminders();
 };
 
+
+
 setInterval(() => {
     const now = new Date();
     const hours = now.getHours().toString().padStart(2, '0');
