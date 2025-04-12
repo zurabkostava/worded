@@ -25,61 +25,15 @@
     </script>
     <script defer="" src="puzzle.js">
     </script>
-    <script defer="" src="service-worker.js">
-    </script><script defer="" src="firebase-messaging-sw.js">
-</script>
     <script src="tts.js"></script>
-    <link rel="manifest" href="/manifest.json">
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyArftPeH-SoIwmm2aKLDHBTE8M4DQ5jLM8",
-            authDomain: "worded-1a455.firebaseapp.com",
-            projectId: "worded-1a455",
-            storageBucket: "worded-1a455.appspot.com",
-            messagingSenderId: "385741553786",
-            appId: "1:385741553786:web:c9e1d0d5bb662950f9fbc3",
-            measurementId: "G-9QPQ3JE2MZ"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const messaging = getMessaging(app);
-
+    <link rel="manifest" href="manifest.json" />
+    <script>
         if ('serviceWorker' in navigator) {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                console.log("📦 SW რეგისტრაცია:", registration);
-
-                try {
-                    const token = await getToken(messaging, {
-                        vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves",
-                        serviceWorkerRegistration: registration
-                    });
-
-                    if (token) {
-                        console.log("🔐 FCM Token:", token);
-                        localStorage.setItem("fcmToken", token);
-                    } else {
-                        console.warn("⚠️ Token is null. Check permission or VAPID key.");
-                    }
-                } catch (err) {
-                    console.error("💥 getToken error:", err);
-                }
-            } else {
-                console.warn("❌ Notifications permission denied");
-            }
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log("✅ Service Worker რეგისტრირებულია"))
+                .catch(err => console.error("❌ SW error:", err));
         }
-
-        onMessage(messaging, (payload) => {
-            console.log("📥 Foreground message received:", payload);
-            const { title, body } = payload.notification;
-            new Notification(title, { body });
-        });
     </script>
-
 
     <!-- შენიშნე, რომ ორი ახალი ფუნქცია დაგვჭირდება:
             getDocs, doc, setDoc, deleteDoc -->
@@ -108,56 +62,9 @@
             measurementId: "G-9QPQ3JE2MZ"
         };
 
-
-        import { getMessaging, getToken, onMessage } from "firebase/messaging";
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const messaging = getMessaging(app);
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/service-worker.js')
-                .then((registration) => {
-                    console.log('✔ Service Worker რეგისტრირებულია');
-
-                    getToken(messaging, {
-                        vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves",
-                        serviceWorkerRegistration: registration
-                    }).then((currentToken) => {
-                        if (currentToken) {
-                            console.log('🔐 ტოკენი:', currentToken);
-                            localStorage.setItem("fcmToken", currentToken);
-                        } else {
-                            console.warn("❌ ტოკენი ვერ მოიპოვა. ნებართვა მოთხოვნილია?");
-                        }
-                    });
-                });
-        }
-
-        onMessage(messaging, (payload) => {
-            console.log('📥 Foreground შეტყობინება:', payload);
-            alert(payload.notification.title + "\n" + payload.notification.body);
-        });
-        // 🔐 გამოითხოვე ტოკენი
-        getToken(messaging, {
-            vapidKey: 'BIumvj...Tვეაგაგრძელებ' // გჭირდება VAPID PUBLIC KEY → შემატყობინე და გაჩვენებ
-        }).then((currentToken) => {
-            if (currentToken) {
-                console.log("🔑 Token:", currentToken);
-                localStorage.setItem('push_token', currentToken);
-            } else {
-                console.warn('🔒 No registration token available. Request permission first.');
-            }
-        }).catch((err) => {
-            console.error('💥 An error occurred while retrieving token.', err);
-        });
-
-        // საიტი როცა ღიაა:
-        onMessage(messaging, (payload) => {
-            console.log('📩 Message received: ', payload);
-            const { title, body } = payload.notification;
-            new Notification(title, { body });
-        });
         document.getElementById("pullFromFirestoreBtn").addEventListener("click", pullAllCardsFromFirebase);
 
         async function pullAllCardsFromFirebase() {
@@ -223,9 +130,6 @@
             }
         }
 
-        Notification.requestPermission().then(permission => {
-            console.log('🔐 Notification Permission:', permission);
-        });
 
 
 
