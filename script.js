@@ -718,6 +718,7 @@ addReminderBtn.onclick = () => {
 };
 
 
+
 function clearReminderForm() {
     reminderTimeInput.value = '';
     document.querySelectorAll('.weekday-checkboxes input').forEach(cb => cb.checked = false);
@@ -815,8 +816,8 @@ setInterval(() => {
             }
         }
     });
+}, 60 * 1000); // Every minute check
 
-}, 60 * 1000);
 
 
 function sendNotification(text = null) {
@@ -842,6 +843,7 @@ function sendNotification(text = null) {
         });
     }
 }
+
 
 
 
@@ -1060,14 +1062,14 @@ document.querySelectorAll('.training-tab').forEach(tab => {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    navigator.serviceWorker.ready.then(function(reg) {
-      reg.showNotification("ტესტი Android-ზე", {
-        body: "თუ ხედავ ამას, მუშაობს",
-        icon: "/icons/icon-192.png"
-      });
-    });
-  }, 5000);
+    setTimeout(() => {
+        navigator.serviceWorker.ready.then(function(reg) {
+            reg.showNotification("ტესტი Android-ზე", {
+                body: "თუ ხედავ ამას, მუშაობს",
+                icon: "/icons/icon-192.png"
+            });
+        });
+    }, 5000);
 });
 
 // ==== თარგმანების დამატება ====
