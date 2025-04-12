@@ -31,13 +31,15 @@ self.addEventListener('fetch', event => {
     );
 });
 self.addEventListener('push', function(event) {
-  const data = event.data?.json() || { title: 'Word Reminder', body: 'Time to review!' };
+    const data = event.data.json();
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/icons/icon-192.png',
-      tag: 'word-reminder'
-    })
-  );
+    const options = {
+        body: data.body,
+        // icon: '/icon.png', // სურვილისამებრ
+        // badge: '/badge.png', // სურვილისამებრ
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
 });
