@@ -30,34 +30,56 @@
 </script>
     <script src="tts.js"></script>
     <link rel="manifest" href="/manifest.json">
-    <script>
-
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyArftPeH-SoIwmm2aKLDHBTE8M4DQ5jLM8",
+            authDomain: "worded-1a455.firebaseapp.com",
+            projectId: "worded-1a455",
+            storageBucket: "worded-1a455.appspot.com",
+            messagingSenderId: "385741553786",
+            appId: "1:385741553786:web:c9e1d0d5bb662950f9fbc3",
+            measurementId: "G-9QPQ3JE2MZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
         const messaging = getMessaging(app);
 
-        navigator.serviceWorker.register('/firebase-messaging-sw.js')
-            .then((registration) => {
-                console.log('✅ Firebase Messaging SW რეგისტრირებულია');
+        if ('serviceWorker' in navigator) {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                console.log("📦 SW რეგისტრაცია:", registration);
 
-                return getToken(messaging, {
-                    vapidKey: 'BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves',
-                    serviceWorkerRegistration: registration
-                });
-            })
-            .then((token) => {
-                if (token) {
-                    console.log('🔐 მიღებული ტოკენი:', token);
-                    localStorage.setItem('fcmToken', token);
-                } else {
-                    console.warn('❌ ტოკენი ვერ მოიძებნა. ნებართვა მიღებულია?');
+                try {
+                    const token = await getToken(messaging, {
+                        vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves",
+                        serviceWorkerRegistration: registration
+                    });
+
+                    if (token) {
+                        console.log("🔐 FCM Token:", token);
+                        localStorage.setItem("fcmToken", token);
+                    } else {
+                        console.warn("⚠️ Token is null. Check permission or VAPID key.");
+                    }
+                } catch (err) {
+                    console.error("💥 getToken error:", err);
                 }
-            })
-            .catch((err) => {
-                console.error('💥 ტოკენის მიღების შეცდომა:', err);
-            });
+            } else {
+                console.warn("❌ Notifications permission denied");
+            }
+        }
 
+        onMessage(messaging, (payload) => {
+            console.log("📥 Foreground message received:", payload);
+            const { title, body } = payload.notification;
+            new Notification(title, { body });
+        });
     </script>
+
 
     <!-- შენიშნე, რომ ორი ახალი ფუნქცია დაგვჭირდება:
             getDocs, doc, setDoc, deleteDoc -->
