@@ -1,3 +1,5 @@
+import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
+
 const CACHE_NAME = 'english-cards-v1';
 const urlsToCache = [
     '/',
@@ -17,6 +19,28 @@ const urlsToCache = [
     '/icons/icon-512.png'
 ];
 
+
+const messaging = getMessaging(app);
+
+navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    .then((registration) => {
+        console.log('📩 Firebase Messaging SW რეგისტრირებულია');
+
+        getToken(messaging, {
+            vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves",
+            serviceWorkerRegistration: registration
+        }).then((currentToken) => {
+            if (currentToken) {
+                console.log("🔐 Token:", currentToken);
+            } else {
+                console.warn("🚫 Token ვერ მოიპოვა. ნებართვა ხომ არ აკლია?");
+            }
+        }).catch(err => {
+            console.error("❌ ტოკენის შეცდომა:", err);
+        });
+    }).catch(err => {
+    console.error("❌ ServiceWorker რეგისტრაციის შეცდომა:", err);
+});
 // ინსტალაცია
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -30,46 +54,16 @@ self.addEventListener('fetch', event => {
         caches.match(event.request).then(resp => resp || fetch(event.request))
     );
 });
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-messaging.js";
+self.addEventListener('push', function(event) {
+    const data = event.data.json();
 
-const firebaseConfig = {
-    apiKey: "AIzaSyArftPeH-SoIwmm2aKLDHBTE8M4DQ5jLM8",
-    authDomain: "worded-1a455.firebaseapp.com",
-    projectId: "worded-1a455",
-    storageBucket: "worded-1a455.appspot.com",
-    messagingSenderId: "385741553786",
-    appId: "1:385741553786:web:c9e1d0d5bb662950f9fbc3",
-    measurementId: "G-9QPQ3JE2MZ"
-};
+    const options = {
+        body: data.body,
+        // icon: '/icon.png', // სურვილისამებრ
+        // badge: '/badge.png', // სურვილისამებრ
+    };
 
-const vapidKey = "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves";
-
-const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
-
-// ✅ მოითხოვე ნებართვა
-Notification.requestPermission().then((permission) => {
-    if (permission === 'granted') {
-        console.log('🔓 ნებართვა მიცემულია');
-
-        getToken(messaging, {
-            vapidKey: vapidKey,
-            serviceWorkerRegistration: navigator.serviceWorker.ready
-        })
-            .then((currentToken) => {
-                if (currentToken) {
-                    console.log("🔐 ტოკენი:", currentToken);
-                    localStorage.setItem("fcmToken", currentToken);
-                } else {
-                    console.warn('⚠️ ტოკენი ვერ მოიძებნა');
-                }
-            })
-            .catch((err) => {
-                console.error('🔥 ტოკენის მიღების შეცდომა:', err);
-            });
-
-    } else {
-        console.warn('⛔️ მომხმარებელმა არ მისცა ნებართვა');
-    }
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
 });
