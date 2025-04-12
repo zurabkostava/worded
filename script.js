@@ -835,14 +835,19 @@ function sendNotification(text = null) {
         message = `✨ ${card.word} — ${translation}`;
     }
 
-    if (Notification.permission === "granted") {
-        new Notification(text || message);
-    } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                new Notification(text || message);
-            }
+    // ❌ ეს არ მუშაობს სწორად:
+    // new Notification(text || message);
+
+    // ✅ გამოიყენე ეს:
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(function(reg) {
+            reg.showNotification("შეხსენება 🔔", {
+                body: text || message,
+                icon: "/icons/icon-192.png"
+            });
         });
+    } else {
+        console.warn("Service Worker არ არის მხარდაჭერილი.");
     }
 }
 
