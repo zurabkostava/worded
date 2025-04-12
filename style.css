@@ -1,3 +1,5 @@
+/*style.css*/
+
 body {
     margin: 0;
     padding: 10px;
@@ -415,6 +417,7 @@ body.dark #toggleDarkModeBtn:hover {
 .top {
     position: sticky;
     top: 10px; /* ზუსტად იმავე პადინგზე რაც body-ს აქვს */
+
     z-index: 9999; /* სხვა ელემენტებზე მაღლა რომ იყოს */
 }
 
@@ -2235,6 +2238,9 @@ textarea {
     }
     .top {
         display: none;
+        transition: all ease-in-out 0.3s;
+
+
     }
 
 
@@ -2245,6 +2251,14 @@ textarea {
     .top-right{
         justify-content: center;
         padding-bottom: 8px;
+    }
+
+    .card{
+        width: 100%;
+    }
+
+    .card-container{
+        margin-top: 40px;
     }
 
     #toggleSidebarBtn{
