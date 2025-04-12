@@ -1,4 +1,8 @@
-import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
+import {
+    getMessaging,
+    getToken,
+    onMessage
+} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
 
 const CACHE_NAME = 'english-cards-v1';
 const urlsToCache = [
@@ -23,23 +27,25 @@ const messaging = getMessaging(app);
 
 navigator.serviceWorker.register('/firebase-messaging-sw.js')
     .then((registration) => {
-        console.log('📩 Firebase Messaging SW რეგისტრირებულია');
+        console.log('✔ Firebase Messaging SW რეგისტრირებულია');
+
+        const messaging = getMessaging(app);
 
         getToken(messaging, {
             vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves",
             serviceWorkerRegistration: registration
         }).then((currentToken) => {
             if (currentToken) {
-                console.log("🔐 Token:", currentToken);
+                console.log('🔐 ტოკენი:', currentToken);
+                localStorage.setItem("fcmToken", currentToken);
             } else {
-                console.warn("🚫 Token ვერ მოიპოვა. ნებართვა ხომ არ აკლია?");
+                console.warn("❌ ტოკენი ვერ მოიპოვა. ნებართვა მოთხოვნილია?");
             }
-        }).catch(err => {
-            console.error("❌ ტოკენის შეცდომა:", err);
+        }).catch((err) => {
+            console.error("💥 Token მიღების შეცდომა:", err);
         });
-    }).catch(err => {
-    console.error("❌ ServiceWorker რეგისტრაციის შეცდომა:", err);
-});
+    });
+
 // ინსტალაცია
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -65,4 +71,7 @@ self.addEventListener('push', function(event) {
     event.waitUntil(
         self.registration.showNotification(data.title, options)
     );
+});
+Notification.requestPermission().then(permission => {
+    console.log("🔐 Notification permission:", permission);
 });
