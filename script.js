@@ -151,6 +151,7 @@ document.getElementById('resetStatsBtn')?.addEventListener('click', () => {
 
     // 💾 შენახვა
     saveToStorage?.();
+    autoSyncOnChange?.();
 
     // 🔁 სტატისტიკის მოდალის განახლება რეალურ დროში
     updateStatsModal?.();
@@ -663,6 +664,9 @@ deleteSelectedBtn.onclick = () => {
     selectionMode = false;
     updateSelectionUI();
     saveToStorage();
+    saveToStorage();
+    autoSyncOnChange?.();
+
 };
 cancelSelectionBtn.onclick = () => {
     document.querySelectorAll('.card.selected').forEach(card => card.classList.remove('selected'));
@@ -880,6 +884,17 @@ if (window.innerWidth <= 768) {
 }
 
 
+function autoSyncOnChange() {
+    if (window.autoSyncInProgress) return; // რომ არ გაეშვას ზედმეტად
+
+    window.autoSyncInProgress = true;
+    document.getElementById("syncAllBtn").click();
+
+    // ცოტა დროის შემდეგ შეიძლება ისევ დაუშვას
+    setTimeout(() => {
+        window.autoSyncInProgress = false;
+    }, 5000); // მინიმუმ 5 წამი შესვენება
+}
 
 
 // ==== გადმოტვირთვა localStorage-დან ====
@@ -1334,6 +1349,8 @@ saveCardBtn.onclick = () => {
 
     saveToStorage();
     resetModal();
+    autoSyncOnChange?.();
+
 };
 
 
@@ -1446,6 +1463,8 @@ function renderCardFromData(data) {
     card.querySelector('.fa-trash-alt').onclick = () => {
         card.remove();
         saveToStorage();
+        autoSyncOnChange();
+
     };
 
     card.onclick = (e) => {
@@ -2027,6 +2046,7 @@ document.getElementById('importExcelInput').addEventListener('change', function 
 
 // 💾 შენახვა
         saveToStorage();
+        autoSyncOnChange?.();
 
 
 
