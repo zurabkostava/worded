@@ -197,25 +197,18 @@
                 serverMap[docSnap.id] = cardData;
 
                 if (localWordsMap[wordKey]) {
-                    const localCard = localWordsMap[wordKey];
-                    const remoteUpdated = cardData.updated || 0;
-                    const localUpdated = localCard.updated || 0;
+                    // შენარჩუნდეს არსებული progress ლოკალური
+                    const existingProgress = localWordsMap[wordKey].progress || 0;
 
-                    if (remoteUpdated > localUpdated) {
-                        // Firebase-ზე ახალია → გადავწეროთ ლოკალური
-                        Object.assign(localCard, {
-                            ...cardData,
-                            firebaseId: docSnap.id
-                        });
-                    } else {
-                        // ლოკალური ახალია → არ შეცვალო
-                    }
-
-                } else {
-                    // ახალი სიტყვაა → დაამატე
+                    Object.assign(localWordsMap[wordKey], {
+                        ...cardData,
+                        firebaseId: docSnap.id,
+                        progress: existingProgress  // ✅ აქ ხდება გადარჩენა
+                    });
+                }
+                else {
                     fetchedCards.push(cardData);
                 }
-
             });
 
 
