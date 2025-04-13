@@ -884,7 +884,8 @@ if (window.innerWidth <= 768) {
 
 // ==== გადმოტვირთვა localStorage-დან ====
 document.addEventListener('DOMContentLoaded', () => {
-    
+    document.getElementById("pullFromFirestoreBtn").click();
+
     const closeBtn = document.getElementById('closePreviewBtn');
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
