@@ -457,6 +457,7 @@ let previewManuallyClosed = false;
 let sortOrder = 'asc'; // 'asc' ან 'desc'
 let touchStartX = 0;
 let touchEndX = 0;
+
 const shuffleBtn = document.querySelector('.player .fa-shuffle').closest('button');
 
 
@@ -504,6 +505,18 @@ shuffleBtn.onclick = () => {
     }
 };
 
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+
+    // Remove toast after animation completes
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
 
 sortSelect.addEventListener('change', () => {
     currentSortMode = sortSelect.value;
@@ -1304,7 +1317,7 @@ saveCardBtn.onclick = () => {
         editingCard.dataset.english = JSON.stringify(englishSentences);
         editingCard.dataset.georgian = JSON.stringify(georgianSentences);
         editingCard.dataset.updated = Date.now(); // ✅ განახლების დრო
-        editingCard.dataset.firebaseId = editingCard.dataset.firebaseId || ''; // ✅ ამას დაამატე
+
         sortCards(); // ✅ update-ის შემდეგ გადალაგდეს
     } else {
         renderCardFromData({
@@ -2236,8 +2249,7 @@ function saveToStorage() {
             tags: tagList,
             englishSentences,
             georgianSentences,
-            progress: parseFloat(card.dataset.progress || 0),
-            firebaseId: card.dataset.firebaseId || null  // ✅ შენახვა
+            progress: parseFloat(card.dataset.progress || 0)
 
         };
     });
@@ -2276,4 +2288,5 @@ function loadCardsFromStorage() {
     // 4. დაბოლოს, გამოვიძახოთ	renderTagLibrary() – რომ თეგების ბიბლიოტეკაც წარმოიქმნას
     renderTagLibrary();
 }
+
 
