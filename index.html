@@ -136,7 +136,7 @@
 
                 }
 
-                showToast("✅ Firestore-დან იმპორტი წარმატებით დასრულდა!");
+                showToast("✔ Firestore-დან იმპორტი წარმატებით დასრულდა!");
 
             } catch (err) {
                 console.error("❌ Firestore Load შეცდომა:", err);
@@ -148,154 +148,136 @@
 
 
         document.getElementById("syncAllBtn").addEventListener("click", async () => {
-            const btn = document.getElementById("syncAllBtn");
-            btn.disabled = true;
-            btn.textContent = "იტვირთება...";
+            const syncBtn = document.getElementById("syncAllBtn");
+            const originalText = syncBtn.innerHTML;
 
             try {
-                await syncAllCardsToFirebase();       // ⬆ Upload local data
-                await pullAllCardsFromFirebase();     // ⬇ Pull from Firebase (overwrite local copy)
+                // Show loading state
+                syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+                syncBtn.disabled = true;
 
-                btn.textContent = "✅ დასრულდა!";
-            } catch (err) {
-                console.error("სინქრონიზაციის შეცდომა:", err);
-                btn.textContent = "❌ შეცდომა";
-                showToast("სინქრონიზაცია ვერ მოხერხდა!");
+                // First perform the publish operation
+                await syncAllCardsToFirebase();
+
+                // If successful, show success message
+                syncBtn.innerHTML = '<i class="fas fa-check"></i> Published!';
+
+                // Wait a moment, then trigger the sync operation
+                setTimeout(async () => {
+                    try {
+                        syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+
+                        // Perform the sync operation
+                        await pullAllCardsFromFirebase();
+
+                        // Show final success state
+                        syncBtn.innerHTML = '<i class="fas fa-check-double"></i> Done!';
+                        setTimeout(() => {
+                            syncBtn.innerHTML = originalText;
+                            syncBtn.disabled = false;
+                        }, 2000);
+                    } catch (syncError) {
+                        syncBtn.innerHTML = '<i class="fas fa-times"></i> Sync Failed';
+                        setTimeout(() => {
+                            syncBtn.innerHTML = originalText;
+                            syncBtn.disabled = false;
+                        }, 2000);
+                        console.error("Sync error:", syncError);
+                    }
+                }, 1000);
+            } catch (publishError) {
+                syncBtn.innerHTML = '<i class="fas fa-times"></i> Publish Failed';
+                setTimeout(() => {
+                    syncBtn.innerHTML = originalText;
+                    syncBtn.disabled = false;
+                }, 2000);
+                console.error("Publish error:", publishError);
             }
-
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.textContent = "Sync";
-            }, 2000);
         });
-
-
         async function syncAllCardsToFirebase() {
-            const stored = localStorage.getItem("english_cards_app");
-            if (!stored) {
-                throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
-            }
-
-            const data = JSON.parse(stored);
-            const localWordsMap = {};
-            const fetchedCards = [];
-
-            // mapify
-            data.cards.forEach(card => {
-                const wordKey = card.word.trim().toLowerCase();
-                localWordsMap[wordKey] = card;
-            });
-
-            const snapshot = await getDocs(collection(db, "cards"));
-            const serverMap = {};
-
-            snapshot.forEach(docSnap => {
-                const cardData = docSnap.data();
-                const wordKey = cardData.word.trim().toLowerCase();
-                cardData.firebaseId = docSnap.id;
-
-                serverMap[docSnap.id] = cardData;
-
-                if (localWordsMap[wordKey]) {
-                    // შენარჩუნდეს არსებული progress ლოკალური
-                    const existingProgress = localWordsMap[wordKey].progress || 0;
-
-                    Object.assign(localWordsMap[wordKey], {
-                        ...cardData,
-                        firebaseId: docSnap.id,
-                        progress: existingProgress  // ✅ აქ ხდება გადარჩენა
-                    });
+            try {
+                const stored = localStorage.getItem("english_cards_app");
+                if (!stored) {
+                    throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
                 }
-                else {
-                    fetchedCards.push(cardData);
-                }
-            });
 
+                const data = JSON.parse(stored);
+                const localWordsMap = {};
+                const fetchedCards = [];
 
-            // 3. თუ localStorage-ში არის ბარათები, ატვირთე/განაახლე
-            if (data.cards && data.cards.length) {
-                for (const card of data.cards) {
-                    const docData = {
-                        word: card.word,
-                        mainTranslations: card.mainTranslations,
-                        extraTranslations: card.extraTranslations,
-                        tags: card.tags,
-                        englishSentences: card.englishSentences,
-                        georgianSentences: card.georgianSentences,
-                        progress: card.progress || 0,
-                        updated: Date.now()
-                    };
+                // mapify
+                data.cards.forEach(card => {
+                    const wordKey = card.word.trim().toLowerCase();
+                    localWordsMap[wordKey] = card;
+                });
 
-                    if (!card.firebaseId) {
-                        // ახალი ბარათი
-                        const docRef = await addDoc(collection(db, "cards"), docData);
-                        card.firebaseId = docRef.id;
+                const snapshot = await getDocs(collection(db, "cards"));
+                const serverMap = {};
+
+                snapshot.forEach(docSnap => {
+                    const cardData = docSnap.data();
+                    const wordKey = cardData.word.trim().toLowerCase();
+                    cardData.firebaseId = docSnap.id;
+
+                    serverMap[docSnap.id] = cardData;
+
+                    if (localWordsMap[wordKey]) {
+                        Object.assign(localWordsMap[wordKey], {
+                            ...cardData,
+                            firebaseId: docSnap.id,
+                        });
                     } else {
-                        // არსებული ბარათი
-                        await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
+                        fetchedCards.push(cardData);
+                    }
+                });
+
+                // 3. თუ localStorage-ში არის ბარათები, ატვირთე/განაახლე
+                if (data.cards && data.cards.length) {
+                    for (const card of data.cards) {
+                        const docData = {
+                            word: card.word,
+                            mainTranslations: card.mainTranslations,
+                            extraTranslations: card.extraTranslations,
+                            tags: card.tags,
+                            englishSentences: card.englishSentences,
+                            georgianSentences: card.georgianSentences,
+                            progress: card.progress || 0,
+                            updated: Date.now()
+                        };
+
+                        if (!card.firebaseId) {
+                            // ახალი ბარათი
+                            const docRef = await addDoc(collection(db, "cards"), docData);
+                            card.firebaseId = docRef.id;
+                        } else {
+                            // არსებული ბარათი
+                            await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
+                        }
                     }
                 }
-            }
 
-            // 4. წაშლა Firestore-ში არსებული დოკების, რომლებიც ლოკალურად აღარ არსებობს
-            const localIds = new Set(
-                (data.cards || []) // თუ cards არაა, მაინც ცარიელ მასივს გავუშვებთ
-                    .filter(c => c.firebaseId)
-                    .map(c => c.firebaseId)
-            );
+                // 4. წაშლა Firestore-ში არსებული დოკების, რომლებიც ლოკალურად აღარ არსებობს
+                const localIds = new Set(
+                    (data.cards || []) // თუ cards არაა, მაინც ცარიელ მასივს გავუშვებთ
+                        .filter(c => c.firebaseId)
+                        .map(c => c.firebaseId)
+                );
 
-            for (const docId of Object.keys(serverMap)) {
-                if (!localIds.has(docId)) {
-                    await deleteDoc(doc(db, "cards", docId));
+                for (const docId of Object.keys(serverMap)) {
+                    if (!localIds.has(docId)) {
+                        await deleteDoc(doc(db, "cards", docId));
+                    }
                 }
-            }
 
-            // 5. შევინახოთ ახალდანიშნული firebaseId-ები
-            localStorage.setItem("english_cards_app", JSON.stringify(data));
-        }
-        // გლობალური ცვლადები ავტომატური სინქრონიზაციისათვის
-        let autoSyncInterval = null;
+                // 5. შევინახოთ ახალდანიშნული firebaseId-ები
+                localStorage.setItem("english_cards_app", JSON.stringify(data));
 
-        // ½ - დავაგეგმოთ event listener ჩექბოქსზე
-        document.getElementById('autoSyncCheckbox').addEventListener('change', function() {
-            const isChecked = this.checked;
-            localStorage.setItem('AUTO_SYNC_ENABLED', isChecked ? '1' : '0');
-
-            if (isChecked) {
-                autoSyncInterval = setInterval(autoSync, 60000);
-                showToast("ავტომატური სინქრონიზაცია ჩართულია", "info");
-            } else {
-                clearInterval(autoSyncInterval);
-                autoSyncInterval = null;
-                showToast("ავტომატური სინქრონიზაცია გათიშულია", "info");
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const autoSyncCheckbox = document.getElementById('autoSyncCheckbox');
-            const savedState = localStorage.getItem('AUTO_SYNC_ENABLED');
-
-            if (savedState === '1') {
-                autoSyncCheckbox.checked = true;
-                autoSyncInterval = setInterval(autoSync, 60000);
-                console.log("ჩატვირთვისას: ავტომატური სინქრონიზაცია ჩართულია");
-            }
-        });
-
-
-        // ½ - ავტომატური სინქრონიზაციის ფუნქცია
-        async function autoSync() {
-
-            showToast("ავტომატური სინქრონიზაციის პროცესი დაიწყო (background ტაბშიაც მუშაობს)");
-            try {
-                await syncAllCardsToFirebase();
-                await pullAllCardsFromFirebase();
-                console.log("✅ ავტომატური სინქრონიზაცია დასრულდა წარმატებით");
+                return true; // Indicate success
             } catch (err) {
-                showToast.error("ავტომატური სინქრონიზაციის შეცდომა:", err);
+                console.error("სინქრონიზაციის შეცდომა:", err);
+                throw err; // Re-throw the error
             }
         }
-
     </script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
@@ -342,13 +324,10 @@
 
         </div>
         <div class="top-right">
+            <button class="toolbar-btn" id="pullFromFirestoreBtn">Sync</button>
 
-            <label style="margin-left: 10px; font-size: 0.9em; cursor: pointer;">
-                <input type="checkbox" id="autoSyncCheckbox" style="vertical-align: middle; margin-right: 5px;">
-                ავტო
-            </label>
 
-            <button class="toolbar-btn" id="syncAllBtn">Sync</button>
+            <button class="toolbar-btn" id="syncAllBtn">Publish</button>
             <button id="toggleDarkModeBtn" title="Dark Mode Toggle">
                 <i class="fas fa-moon">
                 </i>
@@ -678,7 +657,6 @@
                 </input>
 
 
-                <button class="toolbar-btn" id="pullFromFirestoreBtn">Firestore-დან ჩამოტვირთვა</button>
 
 
             </div>
@@ -937,7 +915,6 @@
 </div>
 
 <h2 class="mobile-tittle">Worded</h2>
-<div id="toastContainer" class="toast-container"></div>
-
+<div class="toast-container" id="toastContainer"></div>
 </body>
 </html>
