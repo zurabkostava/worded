@@ -875,8 +875,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
-
-
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
@@ -1306,7 +1304,7 @@ saveCardBtn.onclick = () => {
         editingCard.dataset.english = JSON.stringify(englishSentences);
         editingCard.dataset.georgian = JSON.stringify(georgianSentences);
         editingCard.dataset.updated = Date.now(); // ✅ განახლების დრო
-
+        editingCard.dataset.firebaseId = editingCard.dataset.firebaseId || ''; // ✅ ამას დაამატე
         sortCards(); // ✅ update-ის შემდეგ გადალაგდეს
     } else {
         renderCardFromData({
@@ -2238,7 +2236,8 @@ function saveToStorage() {
             tags: tagList,
             englishSentences,
             georgianSentences,
-            progress: parseFloat(card.dataset.progress || 0)
+            progress: parseFloat(card.dataset.progress || 0),
+            firebaseId: card.dataset.firebaseId || null  // ✅ შენახვა
 
         };
     });
