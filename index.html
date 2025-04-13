@@ -96,84 +96,45 @@
                 });
         });
 
+        
+Original file line number	Diff line number	Diff line change
+@@ -159,27 +159,30 @@
+        });
+
         async function syncAllCardsToFirebase() {
+            // 1. წამოვიღოთ localStorage JSON
             const stored = localStorage.getItem("english_cards_app");
             if (!stored) {
+                // თუ საერთოდ არ არსებობს
                 throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
             }
 
             const data = JSON.parse(stored);
             const localWordsMap = {};
             const fetchedCards = [];
-
             // mapify
             data.cards.forEach(card => {
                 const wordKey = card.word.trim().toLowerCase();
                 localWordsMap[wordKey] = card;
             });
 
+            // 2. წამოვიღოთ Firestore-ის ყველა დოკი
             const snapshot = await getDocs(collection(db, "cards"));
+            const serverMap = {}; // { docId: docData }
             const serverMap = {};
-
             snapshot.forEach(docSnap => {
                 const cardData = docSnap.data();
                 const wordKey = cardData.word.trim().toLowerCase();
                 cardData.firebaseId = docSnap.id;
 
+                // ✅ ყოველი ბარათის თეგები ბიბლიოთეკაში
+                if (Array.isArray(cardData.tags)) {
+                    cardData.tags.forEach(tag => allTags.add(tag));
+                }
                 serverMap[docSnap.id] = cardData;
 
                 if (localWordsMap[wordKey]) {
                     Object.assign(localWordsMap[wordKey], {
-                        ...cardData,
-                        firebaseId: docSnap.id,
-                    });
-                } else {
-                    fetchedCards.push(cardData);
-                }
-            });
-
-
-            // 3. თუ localStorage-ში არის ბარათები, ატვირთე/განაახლე
-            if (data.cards && data.cards.length) {
-                for (const card of data.cards) {
-                    const docData = {
-                        word: card.word,
-                        mainTranslations: card.mainTranslations,
-                        extraTranslations: card.extraTranslations,
-                        tags: card.tags,
-                        englishSentences: card.englishSentences,
-                        georgianSentences: card.georgianSentences,
-                        progress: card.progress || 0,
-                        updated: Date.now()
-                    };
-
-                    if (!card.firebaseId) {
-                        // ახალი ბარათი
-                        const docRef = await addDoc(collection(db, "cards"), docData);
-                        card.firebaseId = docRef.id;
-                    } else {
-                        // არსებული ბარათი
-                        await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
-                    }
-                }
-            }
-
-            // 4. წაშლა Firestore-ში არსებული დოკების, რომლებიც ლოკალურად აღარ არსებობს
-            const localIds = new Set(
-                (data.cards || []) // თუ cards არაა, მაინც ცარიელ მასივს გავუშვებთ
-                    .filter(c => c.firebaseId)
-                    .map(c => c.firebaseId)
-            );
-
-            for (const docId of Object.keys(serverMap)) {
-                if (!localIds.has(docId)) {
-                    await deleteDoc(doc(db, "cards", docId));
-                }
-            }
-
-            // 5. შევინახოთ ახალდანიშნული firebaseId-ები
-            localStorage.setItem("english_cards_app", JSON.stringify(data));
-        }
     </script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
