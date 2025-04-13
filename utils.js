@@ -1,6 +1,4 @@
-
-
-
+//utils.js
 
 function updateCardProgress(card, delta) {
     let current = parseFloat(card.dataset.progress || '0');
@@ -27,6 +25,8 @@ function updateCardProgress(card, delta) {
     }
 
     if (typeof saveToStorage === 'function') saveToStorage();
+    autoSyncIfEnabled(); // ✅ ავტომატური
+
 }
 
 function getProgressColor(percent) {
@@ -69,3 +69,17 @@ document.getElementById('hideMasteredCheckbox').addEventListener('change', (e) =
 });
 
 
+document.getElementById("testUploadBtn").addEventListener("click", syncTestCardToFirebase);
+
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 3000); // 3 წამში ქრება
+}
