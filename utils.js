@@ -25,7 +25,6 @@ function updateCardProgress(card, delta) {
     }
 
     if (typeof saveToStorage === 'function') saveToStorage();
-    autoSyncIfEnabled(); // ✅ ავტომატური
 
 }
 
