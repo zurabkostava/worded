@@ -2230,6 +2230,7 @@ textarea {
 }
 
 .mobile-tittle{
+    display: none;
     position: fixed;
     margin-top: 10px;
     z-index: 9999999999999999999;
@@ -2239,6 +2240,10 @@ textarea {
 }
 
 @media (max-width: 768px) {
+    .mobile-tittle{
+        display: block;
+    }
+
     .preview-modal{
         top: 0;
     }
