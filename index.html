@@ -84,15 +84,16 @@
         async function pullAllCardsFromFirebase() {
             try {
                 const snapshot = await getDocs(collection(db, "cards"));
+                const fetchedCards = [];
+
+                // ლოკალური მონაცემების წამოღება
                 const stored = localStorage.getItem("english_cards_app");
                 const localData = stored ? JSON.parse(stored) : { cards: [] };
-                const localWordsMap = {};
 
+                const localWordsMap = {};
                 localData.cards.forEach(card => {
                     localWordsMap[card.word.trim().toLowerCase()] = card;
                 });
-
-                const mergedCards = [];
 
                 snapshot.forEach(docSnap => {
                     const cardData = docSnap.data();
@@ -100,38 +101,48 @@
                     cardData.firebaseId = docSnap.id;
 
                     if (localWordsMap[wordKey]) {
-                        const existing = localWordsMap[wordKey];
-                        mergedCards.push({
+                        // უკვე არსებობს → განახლება
+                        (cardData.tags || []).forEach(tag => allTags.add(tag));
+
+                        Object.assign(localWordsMap[wordKey], {
                             ...cardData,
-                            progress: existing.progress || 0,
                             firebaseId: docSnap.id,
+
                         });
                     } else {
-                        mergedCards.push({
-                            ...cardData,
-                            progress: cardData.progress || 0,
-                            firebaseId: docSnap.id,
-                        });
+                        (cardData.tags || []).forEach(tag => allTags.add(tag));
+
+                        // ახალი სიტყვა
+                        fetchedCards.push(cardData);
                     }
+                    renderSidebarTags();
+                    populateGlobalTags();
+                    renderTagLibrary();
+
                 });
 
-                // შენახე mergedCards
-                localStorage.setItem("english_cards_app", JSON.stringify({ cards: mergedCards }));
+                const combinedCards = [...localData.cards, ...fetchedCards];
 
+                // შევინახოთ
+                localStorage.setItem("english_cards_app", JSON.stringify({ cards: combinedCards }));
+
+                // UI განახლება
                 if (window.loadCardsFromStorage) {
                     document.getElementById('cardContainer').innerHTML = '';
                     window.loadCardsFromStorage();
+
+                    // ყველა ვიზუალი განახლდეს (progress bar და mastered)
                     document.querySelectorAll('.card').forEach(updateCardVisuals);
+
                 }
 
-                showToast("✅ Firestore-დან ჩამოტვირთვა წარმატებით დასრულდა!");
+                showToast("✅ Firestore-დან იმპორტი წარმატებით დასრულდა!");
 
             } catch (err) {
                 console.error("❌ Firestore Load შეცდომა:", err);
-                showToast("სინქრონიზაციის შეცდომა!");
+                showToast("ვერ მოხერხდა ჩამოტვირთვა Firestore-დან!");
             }
         }
-
 
 
 
@@ -186,18 +197,25 @@
                 serverMap[docSnap.id] = cardData;
 
                 if (localWordsMap[wordKey]) {
-                    // შენარჩუნდეს არსებული progress ლოკალური
-                    const existingProgress = localWordsMap[wordKey].progress || 0;
+                    const localCard = localWordsMap[wordKey];
+                    const remoteUpdated = cardData.updated || 0;
+                    const localUpdated = localCard.updated || 0;
 
-                    Object.assign(localWordsMap[wordKey], {
-                        ...cardData,
-                        firebaseId: docSnap.id,
-                        progress: existingProgress  // ✅ აქ ხდება გადარჩენა
-                    });
-                }
-                else {
+                    if (remoteUpdated > localUpdated) {
+                        // Firebase-ზე ახალია → გადავწეროთ ლოკალური
+                        Object.assign(localCard, {
+                            ...cardData,
+                            firebaseId: docSnap.id
+                        });
+                    } else {
+                        // ლოკალური ახალია → არ შეცვალო
+                    }
+
+                } else {
+                    // ახალი სიტყვაა → დაამატე
                     fetchedCards.push(cardData);
                 }
+
             });
 
 
