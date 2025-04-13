@@ -81,64 +81,7 @@
         }).catch((err) => {
             console.error('❌ FCM token შეცდომა:', err);
         });
-        async function syncAllCardsToFirebase() {
-    const btn = document.getElementById("syncAllBtn");
-    btn.disabled = true;
-
-    const originalText = btn.textContent;
-    btn.textContent = "0%";
-
-    const stored = localStorage.getItem("english_cards_app");
-    if (!stored) {
-        throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
-    }
-
-    const data = JSON.parse(stored);
-    const total = data.cards.length;
-    let completed = 0;
-
-    for (const card of data.cards) {
-        const docData = {
-            word: card.word,
-            mainTranslations: card.mainTranslations,
-            extraTranslations: card.extraTranslations,
-            tags: card.tags,
-            englishSentences: card.englishSentences,
-            georgianSentences: card.georgianSentences,
-            progress: card.progress || 0,
-            updated: Date.now()
-        };
-
-        if (!card.firebaseId) {
-            const docRef = await addDoc(collection(db, "cards"), docData);
-            card.firebaseId = docRef.id;
-        } else {
-            await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
-        }
-
-        // განაახლე პროცენტულობა
-        completed++;
-        const percent = Math.floor((completed / total) * 100);
-        btn.textContent = `${percent}%`;
-    }
-
-    // წაშლა Firestore-დან წაშლილი ბარათების
-    const snapshot = await getDocs(collection(db, "cards"));
-    const localIds = new Set(data.cards.map(c => c.firebaseId));
-    for (const docSnap of snapshot.docs) {
-        if (!localIds.has(docSnap.id)) {
-            await deleteDoc(doc(db, "cards", docSnap.id));
-        }
-    }
-
-    localStorage.setItem("english_cards_app", JSON.stringify(data));
-    btn.textContent = "✔";
-    setTimeout(() => {
-        btn.textContent = originalText;
-        btn.disabled = false;
-    }, 2000);
-}
-
+    
 
 
 
