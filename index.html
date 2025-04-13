@@ -84,16 +84,15 @@
         async function pullAllCardsFromFirebase() {
             try {
                 const snapshot = await getDocs(collection(db, "cards"));
-                const fetchedCards = [];
-
-                // ლოკალური მონაცემების წამოღება
                 const stored = localStorage.getItem("english_cards_app");
                 const localData = stored ? JSON.parse(stored) : { cards: [] };
-
                 const localWordsMap = {};
+
                 localData.cards.forEach(card => {
                     localWordsMap[card.word.trim().toLowerCase()] = card;
                 });
+
+                const mergedCards = [];
 
                 snapshot.forEach(docSnap => {
                     const cardData = docSnap.data();
@@ -101,48 +100,38 @@
                     cardData.firebaseId = docSnap.id;
 
                     if (localWordsMap[wordKey]) {
-                        // უკვე არსებობს → განახლება
-                        (cardData.tags || []).forEach(tag => allTags.add(tag));
-
-                        Object.assign(localWordsMap[wordKey], {
+                        const existing = localWordsMap[wordKey];
+                        mergedCards.push({
                             ...cardData,
+                            progress: existing.progress || 0,
                             firebaseId: docSnap.id,
-
                         });
                     } else {
-                        (cardData.tags || []).forEach(tag => allTags.add(tag));
-
-                        // ახალი სიტყვა
-                        fetchedCards.push(cardData);
+                        mergedCards.push({
+                            ...cardData,
+                            progress: cardData.progress || 0,
+                            firebaseId: docSnap.id,
+                        });
                     }
-                    renderSidebarTags();
-                    populateGlobalTags();
-                    renderTagLibrary();
-
                 });
 
-                const combinedCards = [...localData.cards, ...fetchedCards];
+                // შენახე mergedCards
+                localStorage.setItem("english_cards_app", JSON.stringify({ cards: mergedCards }));
 
-                // შევინახოთ
-                localStorage.setItem("english_cards_app", JSON.stringify({ cards: combinedCards }));
-
-                // UI განახლება
                 if (window.loadCardsFromStorage) {
                     document.getElementById('cardContainer').innerHTML = '';
                     window.loadCardsFromStorage();
-
-                    // ყველა ვიზუალი განახლდეს (progress bar და mastered)
                     document.querySelectorAll('.card').forEach(updateCardVisuals);
-
                 }
 
-                showToast("✅ Firestore-დან იმპორტი წარმატებით დასრულდა!");
+                showToast("✅ Firestore-დან ჩამოტვირთვა წარმატებით დასრულდა!");
 
             } catch (err) {
                 console.error("❌ Firestore Load შეცდომა:", err);
-                showToast("ვერ მოხერხდა ჩამოტვირთვა Firestore-დან!");
+                showToast("სინქრონიზაციის შეცდომა!");
             }
         }
+
 
 
 
@@ -165,7 +154,7 @@
 
             setTimeout(() => {
                 btn.disabled = false;
-                btn.textContent = "Publish";
+                btn.textContent = "Sync";
             }, 2000);
         });
 
