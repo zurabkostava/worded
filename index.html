@@ -81,68 +81,63 @@
         }).catch((err) => {
             console.error('❌ FCM token შეცდომა:', err);
         });
-        async function pullAllCardsFromFirebase() {
-            try {
-                const snapshot = await getDocs(collection(db, "cards"));
-                const fetchedCards = [];
+        async function syncAllCardsToFirebase() {
+    const btn = document.getElementById("syncAllBtn");
+    btn.disabled = true;
 
-                // ლოკალური მონაცემების წამოღება
-                const stored = localStorage.getItem("english_cards_app");
-                const localData = stored ? JSON.parse(stored) : { cards: [] };
+    const originalText = btn.textContent;
+    btn.textContent = "0%";
 
-                const localWordsMap = {};
-                localData.cards.forEach(card => {
-                    localWordsMap[card.word.trim().toLowerCase()] = card;
-                });
+    const stored = localStorage.getItem("english_cards_app");
+    if (!stored) {
+        throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
+    }
 
-                snapshot.forEach(docSnap => {
-                    const cardData = docSnap.data();
-                    const wordKey = cardData.word.trim().toLowerCase();
-                    cardData.firebaseId = docSnap.id;
+    const data = JSON.parse(stored);
+    const total = data.cards.length;
+    let completed = 0;
 
-                    if (localWordsMap[wordKey]) {
-                        // უკვე არსებობს → განახლება
-                        (cardData.tags || []).forEach(tag => allTags.add(tag));
+    for (const card of data.cards) {
+        const docData = {
+            word: card.word,
+            mainTranslations: card.mainTranslations,
+            extraTranslations: card.extraTranslations,
+            tags: card.tags,
+            englishSentences: card.englishSentences,
+            georgianSentences: card.georgianSentences,
+            progress: card.progress || 0,
+            updated: Date.now()
+        };
 
-                        Object.assign(localWordsMap[wordKey], {
-                            ...cardData,
-                            firebaseId: docSnap.id,
-
-                        });
-                    } else {
-                        (cardData.tags || []).forEach(tag => allTags.add(tag));
-
-                        // ახალი სიტყვა
-                        fetchedCards.push(cardData);
-                    }
-                    renderSidebarTags();
-                    populateGlobalTags();
-                    renderTagLibrary();
-
-                });
-
-                const combinedCards = [...localData.cards, ...fetchedCards];
-
-                // შევინახოთ
-                localStorage.setItem("english_cards_app", JSON.stringify({ cards: combinedCards }));
-
-                // UI განახლება
-                if (window.loadCardsFromStorage) {
-                    document.getElementById('cardContainer').innerHTML = '';
-                    window.loadCardsFromStorage();
-
-                    // ყველა ვიზუალი განახლდეს (progress bar და mastered)
-                    document.querySelectorAll('.card').forEach(updateCardVisuals);
-
-                }
-
-                alert("✔ Firestore-დან იმპორტი წარმატებით დასრულდა!");
-
-            } catch (err) {
-                console.error("❌ Firestore Load შეცდომა:", err);
-                alert("ვერ მოხერხდა ჩამოტვირთვა Firestore-დან!");
-            }
+        if (!card.firebaseId) {
+            const docRef = await addDoc(collection(db, "cards"), docData);
+            card.firebaseId = docRef.id;
+        } else {
+            await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
         }
+
+        // განაახლე პროცენტულობა
+        completed++;
+        const percent = Math.floor((completed / total) * 100);
+        btn.textContent = `${percent}%`;
+    }
+
+    // წაშლა Firestore-დან წაშლილი ბარათების
+    const snapshot = await getDocs(collection(db, "cards"));
+    const localIds = new Set(data.cards.map(c => c.firebaseId));
+    for (const docSnap of snapshot.docs) {
+        if (!localIds.has(docSnap.id)) {
+            await deleteDoc(doc(db, "cards", docSnap.id));
+        }
+    }
+
+    localStorage.setItem("english_cards_app", JSON.stringify(data));
+    btn.textContent = "✔";
+    setTimeout(() => {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
 
 
 
