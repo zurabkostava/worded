@@ -1,2275 +1,878 @@
-//script.js
-// ==== აქ შეგროვებულია ყველა DOM ელემენტი ====
-const addCardBtn = document.getElementById('addCardBtn');
-const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
-const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
-const modalOverlay = document.getElementById('modalOverlay');
-const cancelBtn = document.getElementById('cancelBtn');
-const saveCardBtn = document.getElementById('saveCardBtn');
-const cardContainer = document.getElementById('cardContainer');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>
+        English Learning Cards
+    </title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
 
-const wordInput = document.getElementById('wordInput');
-const mainTranslationInput = document.getElementById('mainTranslationInput');
-const addMainTranslationBtn = document.getElementById('addMainTranslationBtn');
-const mainTranslationTags = document.getElementById('mainTranslationTags');
-const extraTranslationInput = document.getElementById('extraTranslationInput');
-const addExtraTranslationBtn = document.getElementById('addExtraTranslationBtn');
-const extraTranslationTags = document.getElementById('extraTranslationTags');
-
-const tagInput = document.getElementById('tagInput');
-const addTagBtn = document.getElementById('addTagBtn');
-const tagList = document.getElementById('tagList');
-const tagDropdown = document.getElementById('tagDropdown');
-
-const tagLibraryBtn = document.getElementById('tagLibraryBtn');
-const tagLibraryModal = document.getElementById('tagLibraryModal');
-const closeTagLibraryBtn = document.getElementById('closeTagLibraryBtn');
-const tagListContainer = document.getElementById('tagListContainer');
-
-const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
-const closeSidebarBtn = document.getElementById('closeSidebarBtn');
-const sidebar = document.getElementById('sidebar');
-const sidebarTagList = document.getElementById('sidebarTagList');
-
-const searchInput = document.getElementById('searchInput');
-const selectAllBtn = document.getElementById('selectAllBtn');
-
-const englishSentencesInput = document.getElementById('englishSentences');
-const georgianSentencesInput = document.getElementById('georgianSentences');
-
-
-const settingsBtn = document.getElementById('settingsBtn');
-const settingsModal = document.getElementById('settingsModal');
-const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-const voiceSelect = document.getElementById('voiceSelect');
-const saveVoiceBtn = document.getElementById('saveVoiceBtn');
-
-
-const prevBtn = document.querySelector('.player .fa-backward-step').closest('button');
-const nextBtn = document.querySelector('.player .fa-forward-step').closest('button');
-const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
-mobileSidebarBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('active');
-    activeFilterTags.clear(); // ავტომატურად წავშალოთ ფილტრი
-    renderSidebarTags();
-    filterCardsByTags(); // ბარათებიც განულდეს
-});
-
-
-
-// ... სადღაც ზედა ნაწილში გამოვიყვანოთ ელემენტები:
-const statsBtn = document.getElementById('statsBtn');
-const statsModal = document.getElementById('statsModal');
-const closeStatsBtn = document.getElementById('closeStatsBtn');
-
-
-// შემდეგ სადღაც DOMContentLoaded ან გარეთვე:
-statsBtn.onclick = () => {
-    // 1. შევაგროვოთ სტატისტიკა
-    updateStatsModal();
-
-    // 2. გავხსნათ მოდალი
-    statsModal.style.display = 'flex';
-};
-
-closeStatsBtn.onclick = () => {
-    statsModal.style.display = 'none';
-};
-
-function updateStatsModal() {
-    // 1) საერთო სიტყვების რაოდენობა
-    const allCards = document.querySelectorAll('.card');
-    const totalWords = allCards.length;
-
-    // 2) mastered words – progress >= 100
-    let masteredCount = 0;
-    let totalProgress = 0;
-
-    allCards.forEach(card => {
-        const prog = parseFloat(card.dataset.progress || '0');
-        if (prog >= 100) {
-            masteredCount++;
+    <link href="style.css" rel="stylesheet"/>
+    <script defer="" src="script.js">
+    </script>
+    <script defer="" src="quiz.js">
+    </script>
+    <script defer="" src="wordhear.js">
+    </script>
+    <script defer="" src="makeword.js">
+    </script>
+    <script defer="" src="utils.js">
+    </script>
+    <script defer="" src="mix.js">
+    </script>
+    <script defer="" src="typegame.js">
+    </script>
+    <script defer="" src="sentence.js">
+    </script>
+    <script defer="" src="puzzle.js">
+    </script>
+    <script src="tts.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log("✅ Service Worker რეგისტრირებულია"))
+                .catch(err => console.error("❌ SW error:", err));
         }
-        totalProgress += prog;
-    });
-
-    // 3) საშუალო პროგრესი
-    const avgProgress = totalWords > 0
-        ? (totalProgress / totalWords).toFixed(1)
-        : 0;
-
-    // 4) „გავლილი ტესტირება (სულ)“ – თუ არ გვიჭირავს არც ერთ Card-ზე.
-    //   ვთქვათ, შევინახავთ localStorage-ში
-    //   ან card.dataset.tests ამჟამად არ გვაქვს.
-    const totalTests = parseInt(localStorage.getItem('TOTAL_TESTS') || '0');
-    // თუ გინდა სულაც 0 იყოს
-
-    // 5) სწორი vs არასწორი (თუ არ გაქვს დაგროვებული, შეგვიძლია ასევე localStorage-ში.)
-    const totalCorrect = parseInt(localStorage.getItem('TOTAL_CORRECT') || '0');
-    const totalWrong = parseInt(localStorage.getItem('TOTAL_WRONG') || '0');
-    const totalAnswers = totalCorrect + totalWrong;
-    let correctPercent = 0, wrongPercent = 0;
-    if (totalAnswers > 0) {
-        correctPercent = ((totalCorrect / totalAnswers) * 100).toFixed(1);
-        wrongPercent = ((totalWrong / totalAnswers) * 100).toFixed(1);
-    }
-
-    // ახლა ჩანერგე html-ში
-    document.getElementById('statsTotalWords').textContent = totalWords;
-    document.getElementById('statsMastered').textContent = masteredCount;
-    document.getElementById('statsTotal2').textContent = totalWords;
-    document.getElementById('statsAvgProgress').textContent = avgProgress;
-    document.getElementById('statsTests').textContent = totalTests;
-    document.getElementById('statsCorrectWrong').textContent =
-        `${totalCorrect} - ${totalWrong}  (${correctPercent}% - ${wrongPercent}%)`;
-}
-
-document.getElementById('resetStatsBtn')?.addEventListener('click', () => {
-    if (!confirm("ნამდვილად გსურს სტატისტიკისა და პროგრესის განულება?")) return;
-
-    // 📤 სტატისტიკის გასუფთავება
-    localStorage.removeItem('TOTAL_TESTS');
-    localStorage.removeItem('TOTAL_CORRECT');
-    localStorage.removeItem('TOTAL_WRONG');
-
-    // 📤 თითოეული ქარდის progress-ის განულება
-    document.querySelectorAll('.card').forEach(card => {
-        card.dataset.progress = '0';
-        if (progress >= 100) {
-            card.classList.add('mastered');
-        }
-
-        const progressBar = card.querySelector('.progress-bar');
-        const progressLabel = card.querySelector('.progress-label');
-
-        if (progressBar) progressBar.style.width = '0%';
-        if (progressLabel) progressLabel.textContent = '0%';
-
-        // მოაშორე mastered კლასიც
-        card.classList.remove('mastered');
-    });
-
-    // 💾 შენახვა
-    saveToStorage?.();
-
-    // 🔁 სტატისტიკის მოდალის განახლება რეალურ დროში
-    updateStatsModal?.();
-
-    // თუ გაქვს ცალკე UI-ს გასაახლებელი ფუნქცია (progress bar display-ზე)
-    updateStatsUI?.();
-});
-
-
-
-function getGlobalTrainingSettings() {
-    const tag = document.getElementById('globalTagSelect')?.value || '';
-    const count = parseInt(document.getElementById('globalQuestionCount')?.value || '10');
-    const reverse = document.getElementById('globalReverseToggle')?.checked || false;
-    const hideMastered = document.getElementById('hideMasteredToggle')?.checked || false;
-
-    return { tag, count, reverse, hideMastered };
-}
-
-
-
-function populateGlobalTags() {
-    const select = document.getElementById('globalTagSelect');
-    if (!select) return;
-
-    const tagSet = new Set();
-
-    document.querySelectorAll('.card').forEach(card => {
-        card.querySelectorAll('.card-tag').forEach(tagEl => {
-            const tag = tagEl.textContent.replace('#', '').trim();
-            if (tag) tagSet.add(tag);
-        });
-    });
-
-    select.innerHTML = '<option value="">ყველა</option>';
-    [...tagSet].sort().forEach(tag => {
-        const opt = document.createElement('option');
-        opt.value = tag;
-        opt.textContent = tag;
-        select.appendChild(opt);
-    });
-}
-
-
-document.addEventListener('DOMContentLoaded', populateGlobalTags);
-
-
-
-function getVisibleCards() {
-    const hideMastered = document.getElementById('hideMasteredToggle')?.checked;
-    return [...document.querySelectorAll('.card')].filter(c => {
-        const visible = c.style.display !== 'none';
-        const mastered = parseFloat(c.dataset.progress || '0') >= 100;
-        return visible && (!hideMastered || !mastered);
-    });
-}
-
-
-
-
-const englishRateSlider = document.getElementById('englishRateSlider');
-const georgianRateSlider = document.getElementById('georgianRateSlider');
-
-
-
-
-nextBtn.onclick = async () => {
-    const cards = getVisibleCards();
-    if (cards.length === 0) return;
-
-    if (shuffleMode) {
-        if (playedIndices.length >= cards.length) return;
-        let nextIndex;
-        do {
-            nextIndex = Math.floor(Math.random() * cards.length);
-        } while (playedIndices.includes(nextIndex));
-        currentCardIndex = nextIndex;
-        playedIndices.push(currentCardIndex);
-    } else {
-        // იპოვე მიმდინარე ქარდი და შემდეგზე გადადი
-        const currentCard = document.querySelector('.card.playing');
-        const indexInVisible = cards.indexOf(currentCard);
-        if (indexInVisible === -1 || indexInVisible >= cards.length - 1) return;
-
-        currentCardIndex = indexInVisible + 1;
-    }
-
-    const card = cards[currentCardIndex];
-
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-    card.classList.add('playing');
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    if (!previewManuallyClosed && isPlaying) {
-        loadCardIntoModal(card);
-    }
-    speechSynthesis.cancel();
-
-    if (isPlaying) {
-        await speakPreviewCard(card);
-        if (!shuffleMode) currentCardIndex++;
-        startAutoPlay();
-    }
-};
-
-
-prevBtn.onclick = async () => {
-    const cards = getVisibleCards();
-    if (cards.length === 0) return;
-
-    if (shuffleMode) {
-        if (playedIndices.length <= 1) return;
-        playedIndices.pop(); // წაშალე მიმდინარე
-        currentCardIndex = playedIndices[playedIndices.length - 1];
-    } else {
-        const currentCard = document.querySelector('.card.playing');
-        const indexInVisible = cards.indexOf(currentCard);
-        if (indexInVisible <= 0) return;
-
-        currentCardIndex = indexInVisible - 1;
-    }
-
-    const card = cards[currentCardIndex];
-
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-    card.classList.add('playing');
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-    if (!previewManuallyClosed && isPlaying) {
-        loadCardIntoModal(card);
-    }
-    speechSynthesis.cancel();
-
-    if (isPlaying) {
-        await speakPreviewCard(card);
-        if (!shuffleMode) currentCardIndex++;
-        startAutoPlay();
-    }
-};
-
-
-
-
-
-async function speakPreviewCard(card) {
-    if (!card) return;
-
-    const word = card.querySelector('.word').textContent;
-    const translationEl = card.querySelector('.translation');
-    const mainPart = translationEl.childNodes[0]?.textContent?.trim() || '';
-    const extraPart = translationEl.querySelector('.extra')?.textContent?.trim() || '';
-
-    const en = JSON.parse(card.dataset.english || '[]');
-    const ge = JSON.parse(card.dataset.georgian || '[]');
-
-    await delay(500);
-    const previewWordEl = document.getElementById('previewWord');
-    await speakWithVoice(word, selectedVoice, null, null, previewWordEl);
-    updateCardProgress(card, 0.2);
-    applyCurrentSort?.();
-
-    const previewTranslationEl = document.getElementById('previewTranslation');
-    await speakWithVoice(mainPart, selectedGeorgianVoice, null, extraPart, previewTranslationEl);
-
-    for (let i = 0; i < Math.max(en.length, ge.length); i++) {
-        if (en[i]) {
-            const enEl = document.querySelectorAll('#previewEnglishSentences p')[i];
-            await speakWithVoice(en[i], selectedVoice, null, null, enEl);
-        }
-        if (ge[i]) {
-            const geEl = document.querySelectorAll('#previewGeorgianSentences p')[i];
-            await speakWithVoice(ge[i], selectedGeorgianVoice, null, null, geEl);
-        }
-    }
-}
-
-document.getElementById('showTopBtn').addEventListener('click', () => {
-    document.querySelector('.top').classList.toggle('show');
-});
-
-
-// 👆 Call on settings open
-settingsBtn.onclick = () => {
-    populateVoiceDropdown();
-    loadSpeechRates();
-    settingsModal.style.display = 'flex';
-};
-
-closeSettingsBtn.onclick = () => {
-    settingsModal.style.display = 'none';
-};
-
-// 💾 Save slider values
-saveVoiceBtn.onclick = () => {
-    const selected = voiceSelect.value;
-    localStorage.setItem(VOICE_STORAGE_KEY, selected);
-    selectedVoice = speechSynthesis.getVoices().find(v => v.name === selected);
-
-    const geoSelected = georgianVoiceSelect.value;
-    localStorage.setItem(GEORGIAN_VOICE_KEY, geoSelected);
-    selectedGeorgianVoice = speechSynthesis.getVoices().find(v => v.name === geoSelected);
-
-    // 👇 Save rates
-    localStorage.setItem(ENGLISH_RATE_KEY, englishRateSlider.value);
-    localStorage.setItem(GEORGIAN_RATE_KEY, georgianRateSlider.value);
-
-    settingsModal.style.display = 'none';
-};
-
-
-
-
-
-
-
-const TEXTAREA_STORAGE_KEY = 'sentence_textareas_data';
-
-// შენახვა ავტომატურად როცა იწერება
-function saveTextareaToLocalStorage() {
-    const data = {
-        english: englishSentencesInput.value,
-        georgian: georgianSentencesInput.value
-    };
-    localStorage.setItem(TEXTAREA_STORAGE_KEY, JSON.stringify(data));
-}
-
-englishSentencesInput.addEventListener('input', saveTextareaToLocalStorage);
-georgianSentencesInput.addEventListener('input', saveTextareaToLocalStorage);
-
-
-
-
-function setupSmartNumbering(textarea) {
-    textarea.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-
-            const lines = textarea.value.split('\n');
-            const currentLineIndex = textarea.selectionStart === 0
-                ? 0
-                : textarea.value.substr(0, textarea.selectionStart).split('\n').length - 1;
-
-            const currentLines = textarea.value.split('\n');
-            const nextNumber = currentLines.length + 1;
-            const before = textarea.value.substring(0, textarea.selectionStart);
-            const after = textarea.value.substring(textarea.selectionStart);
-
-            const prefix = `${nextNumber}. `;
-            textarea.value = before + '\n' + prefix + after;
-
-            setTimeout(() => {
-                textarea.selectionStart = textarea.selectionEnd = before.length + prefix.length + 1;
-            }, 0);
-        }
-    });
-
-    textarea.addEventListener('focus', () => {
-        const lines = textarea.value.split('\n');
-        if (lines.length > 0 && !/^\d+\.\s/.test(lines[0])) {
-            lines[0] = '1. ' + lines[0].replace(/^\d+\.\s*/, '');
-            textarea.value = lines.join('\n');
-        }
-    });
-}
-
-setupSmartNumbering(document.getElementById('englishSentences'));
-setupSmartNumbering(document.getElementById('georgianSentences'));
-
-
-
-selectAllBtn.onclick = () => {
-    const visibleCards = [...document.querySelectorAll('.card')]
-        .filter(card => card.style.display !== 'none');
-
-    visibleCards.forEach(card => card.classList.add('selected'));
-
-    selectionMode = true;
-    updateSelectionUI();
-};
-
-
-
-
-// ==== აპის მდგომარეობის ცვლადები ====
-let isEditing = false;
-let editingCard = null;
-let mainTranslations = [];
-let extraTranslations = [];
-let tags = [];
-let allTags = new Set();
-
-let selectionMode = false;
-let longPressTimer = null;
-let wasLongPress = false;
-let activeFilterTags = new Set();
-let currentCardIndex = -1;
-const sortSelect = document.getElementById('sortSelect');
-let currentSortMode = 'progress'; // ახლა default-ად progress
-let isPlaying = false;
-let stopRequested = false;
-let shuffleMode = false;
-let playedIndices = [];
-let previewManuallyClosed = false;
-let sortOrder = 'asc'; // 'asc' ან 'desc'
-let touchStartX = 0;
-let touchEndX = 0;
-const shuffleBtn = document.querySelector('.player .fa-shuffle').closest('button');
-
-
-
-const previewModal = document.getElementById('cardPreviewModal');
-
-previewModal.addEventListener('touchstart', (e) => {
-    touchStartX = e.changedTouches[0].screenX;
-});
-
-previewModal.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipeGesture();
-});
-
-function handleSwipeGesture() {
-    const threshold = 50; // მინიმალური დისტანცია swipe-ისთვის
-
-    if (touchEndX - touchStartX > threshold) {
-        // 👉 Swipe right (წინა სიტყვა)
-        document.getElementById('prevCardBtn').click();
-    } else if (touchStartX - touchEndX > threshold) {
-        // 👈 Swipe left (შემდეგი სიტყვა)
-        document.getElementById('nextCardBtn').click();
-    }
-}
-
-shuffleBtn.onclick = () => {
-    shuffleMode = !shuffleMode;
-    shuffleBtn.classList.toggle('active', shuffleMode);
-
-    // როცა shuffle ირთვება თავიდან ვიწყებთ
-    if (shuffleMode) {
-        playedIndices = [];
-    } else {
-        // 🔄 თუ shuffle გამოირთო და previewModal ღიაა — გადავიდეთ შემდეგზე ჩვეულებრივად
-        const modalVisible = document.getElementById('cardPreviewModal').style.display === 'flex';
-        if (modalVisible) {
-            const cards = getVisibleCards();
-            if (currentCardIndex < cards.length - 1) {
-                currentCardIndex++;
-                loadCardIntoModal(cards[currentCardIndex]);
-            }
-        }
-    }
-};
-
-
-sortSelect.addEventListener('change', () => {
-    currentSortMode = sortSelect.value;
-    sortCards();
-});
-
-function sortCards() {
-    const cards = [...document.querySelectorAll('.card')];
-
-    cards.sort((a, b) => {
-        let valA, valB;
-
-        if (currentSortMode === 'alphabetical') {
-            valA = a.querySelector('.word').textContent.trim().toLowerCase();
-            valB = b.querySelector('.word').textContent.trim().toLowerCase();
-        } else if (currentSortMode === 'updated') {
-            valA = parseInt(a.dataset.updated || 0);
-            valB = parseInt(b.dataset.updated || 0);
-        } else if (currentSortMode === 'progress') {
-            valA = parseFloat(a.dataset.progress || 0);
-            valB = parseFloat(b.dataset.progress || 0);
-        }
-
-
-        const result = valA > valB ? 1 : valA < valB ? -1 : 0;
-        return sortOrder === 'asc' ? result : -result;
-    });
-
-    cards.forEach(card => cardContainer.appendChild(card));
-
-}
-function applyCurrentSort() {
-    sortCards(); // გადაალაგე ქარდები
-}
-
-
-const sortIcon = document.getElementById('sortDirectionIcon');
-
-sortIcon.addEventListener('click', () => {
-    sortOrder = (sortOrder === 'asc') ? 'desc' : 'asc';
-    sortCards();
-
-    // 🧠 Update icon visual direction
-    sortIcon.classList.remove('fa-sort-up', 'fa-sort-down');
-    sortIcon.classList.add(sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
-});
-
-
-
-const playBtn = document.querySelector('.player .fa-play').closest('button');
-const stopBtn = document.querySelector('.player .fa-stop').closest('button');
-
-playBtn.onclick = () => {
-    if (isPlaying) return;
-    isPlaying = true;
-    stopRequested = false;
-    previewManuallyClosed = false; // დაუშვას მოდალის გამოჩენა თავიდან
-    playBtn.classList.add('active');
-    startAutoPlay().then(() => {
-        isPlaying = false;
-        playBtn.classList.remove('active');
-    });
-};
-
-
-
-stopBtn.onclick = () => {
-    isPlaying = false;
-    stopRequested = true;
-    playBtn.classList.remove('active');
-    speechSynthesis.cancel();
-
-    // ✅ Highlight-ები მოვაშოროთ
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-    document.querySelectorAll('.highlighted-sentence').forEach(el => el.classList.remove('highlighted-sentence'));
-};
-
-
-
-async function startAutoPlay() {
-    // const cards = [...document.querySelectorAll('.card')];
-    const cards = getVisibleCards();
-    if (cards.length === 0) return;
-
-    isPlaying = true;
-    playBtn.classList.add('active');
-    stopRequested = false;
-
-    while (!stopRequested && playedIndices.length < cards.length) {
-        if (shuffleMode) {
-            let nextIndex;
-            do {
-                nextIndex = Math.floor(Math.random() * cards.length);
-            } while (playedIndices.includes(nextIndex));
-
-            currentCardIndex = nextIndex;
-            playedIndices.push(currentCardIndex);
-        } else {
-            if (currentCardIndex === -1 || currentCardIndex >= cards.length) {
-                currentCardIndex = 0;
-            }
-        }
-
-        const card = cards[currentCardIndex];
-
-        // Highlight მიმდინარე ქარდი
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-        card.classList.add('playing');
-
-        if (!previewManuallyClosed) {
-            loadCardIntoModal(card); // მოდალი მხოლოდ მაშინ იხსნება თუ არ დაუხურავს მომხმარებელს
-        }
-        await delay(300);
-        await speakPreviewCard(card);
-
-        await delay(500);
-
-        if (!shuffleMode) currentCardIndex++;
-    }
-
-    isPlaying = false;
-    playBtn.classList.remove('active');
-}
-
-
-
-
-const STORAGE_KEY = 'english_cards_app';
-
-
-
-
-
-
-// ==== ღილაკებზე ქმედებები ====
-addCardBtn.onclick = () => {
-    resetModal(); // ✅ ყოველი დამატების დროს მოდალი დაისუფთავოს
-    modalOverlay.style.display = 'flex';
-};
-
-cancelBtn.onclick = resetModal;
-deleteSelectedBtn.onclick = () => {
-    document.querySelectorAll('.card.selected').forEach(card => card.remove());
-    selectionMode = false;
-    updateSelectionUI();
-    saveToStorage();
-};
-cancelSelectionBtn.onclick = () => {
-    document.querySelectorAll('.card.selected').forEach(card => card.classList.remove('selected'));
-    selectionMode = false;
-    updateSelectionUI();
-};
-
-tagLibraryBtn.onclick = () => {
-    tagLibraryModal.style.display = 'flex';
-    renderTagLibrary();
-};
-closeTagLibraryBtn.onclick = () => tagLibraryModal.style.display = 'none';
-
-toggleSidebarBtn.onclick = () => {
-    sidebar.classList.toggle('active');
-    renderSidebarTags();
-};
-closeSidebarBtn.onclick = () => {
-    sidebar.classList.remove('active');
-};
-
-const notificationsBtn = document.getElementById('notificationsBtn');
-const notificationsModal = document.getElementById('notificationsModal');
-const closeNotificationsBtn = document.getElementById('closeNotificationsBtn');
-const reminderTimeInput = document.getElementById('reminderTimeInput');
-const addReminderBtn = document.getElementById('addReminderBtn');
-const reminderList = document.getElementById('reminderList');
-
-let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
-
-notificationsBtn.onclick = () => {
-    renderReminders();
-    notificationsModal.style.display = 'flex';
-    populateNotificationTags();
-
-};
-
-closeNotificationsBtn.onclick = () => {
-    notificationsModal.style.display = 'none';
-};
-
-addReminderBtn.onclick = () => {
-    const time = reminderTimeInput.value;
-    const days = [...document.querySelectorAll('.weekday-checkboxes input:checked')].map(cb => parseInt(cb.value));
-    const tag = document.getElementById("notificationTagFilter").value;
-    const excludeMastered = document.getElementById("excludeMasteredCheckbox").checked;
-
-    if (!time || days.length === 0) {
-        alert("აირჩიე დრო და კვირის დღეები!");
-        return;
-    }
-
-    const newReminder = { time, days, tag, excludeMastered };
-
-    if (editingReminderIndex !== -1) {
-        reminders[editingReminderIndex] = newReminder;
-        editingReminderIndex = -1;
-        addReminderBtn.textContent = '➕ დამატება';
-    } else {
-        reminders.push(newReminder);
-    }
-
-    localStorage.setItem("reminders", JSON.stringify(reminders));
-    renderReminders();
-    clearReminderForm();
-};
-
-
-
-function clearReminderForm() {
-    reminderTimeInput.value = '';
-    document.querySelectorAll('.weekday-checkboxes input').forEach(cb => cb.checked = false);
-    document.getElementById('notificationTagFilter').value = '';
-    document.getElementById('excludeMasteredCheckbox').checked = false;
-}
-
-
-function renderReminders() {
-    reminderList.innerHTML = '';
-    reminders.forEach((reminder, index) => {
-        const li = document.createElement('li');
-        const dayNames = ['კვ.', 'ორშ.', 'სამშ.', 'ოთხშ.', 'ხუთშ.', 'პარ.', 'შაბ.'];
-        const days = reminder.days.map(d => dayNames[d]).join(', ');
-        const extra = [];
-        if (reminder.tag) extra.push(`#${reminder.tag}`);
-        if (reminder.excludeMastered) extra.push("− ნასწავლი");
-
-        li.innerHTML = `
-  ${reminder.time} — ${days} ${extra.length ? `(${extra.join(', ')})` : ''}
-  <button onclick="editReminder(${index})">✏ რედ.</button>
-  <button onclick="removeReminder(${index})">წაშლა</button>
-`;
-
-        reminderList.appendChild(li);
-    });
-}
-let editingReminderIndex = -1;
-
-window.editReminder = function(index) {
-    const reminder = reminders[index];
-    reminderTimeInput.value = reminder.time;
-
-    // მონიშნე შესაბამისი კვირის checkbox-ები
-    document.querySelectorAll('.weekday-checkboxes input').forEach(cb => {
-        cb.checked = reminder.days.includes(parseInt(cb.value));
-    });
-
-    // მონიშნე თეგი
-    document.getElementById('notificationTagFilter').value = reminder.tag || '';
-    document.getElementById('excludeMasteredCheckbox').checked = reminder.excludeMastered || false;
-
-    editingReminderIndex = index;
-    addReminderBtn.textContent = '🔄 განახლება';
-};
-
-function populateNotificationTags() {
-    const select = document.getElementById('notificationTagFilter');
-    if (!select) return;
-
-    select.innerHTML = '<option value="">ყველა თეგი</option>';
-    [...allTags].sort().forEach(tag => {
-        const opt = document.createElement('option');
-        opt.value = tag;
-        opt.textContent = tag;
-        select.appendChild(opt);
-    });
-}
-
-window.removeReminder = function(index) {
-    reminders.splice(index, 1);
-    localStorage.setItem("reminders", JSON.stringify(reminders));
-    renderReminders();
-};
-
-
-
-setInterval(() => {
-    const now = new Date();
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const currentTime = `${hours}:${minutes}`;
-    const currentDay = now.getDay();
-
-    reminders.forEach(reminder => {
-        if (reminder.time === currentTime && reminder.days.includes(currentDay)) {
-            const cards = [...document.querySelectorAll('.card')];
-
-            let filtered = cards;
-            if (reminder.tag) {
-                filtered = filtered.filter(card =>
-                    [...card.querySelectorAll('.card-tag')]
-                        .some(span => span.textContent.replace('#', '') === reminder.tag)
-                );
-            }
-            if (reminder.excludeMastered) {
-                filtered = filtered.filter(card => parseFloat(card.dataset.progress || '0') < 100);
-            }
-
-            if (filtered.length > 0) {
-                const randomCard = filtered[Math.floor(Math.random() * filtered.length)];
-                const word = randomCard.querySelector('.word').textContent;
-                const translation = randomCard.querySelector('.translation').textContent;
-                sendNotification(`📖 ${word} — ${translation}`);
+    </script>
+
+    <!-- შენიშნე, რომ ორი ახალი ფუნქცია დაგვჭირდება:
+            getDocs, doc, setDoc, deleteDoc -->
+    <script type="module">
+        import {
+            initializeApp
+        } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getMessaging, getToken } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging.js";
+        import {
+            getFirestore,
+            collection,
+            addDoc,
+            getDocs,
+            doc,
+            setDoc,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyArftPeH-SoIwmm2aKLDHBTE8M4DQ5jLM8",
+            authDomain: "worded-1a455.firebaseapp.com",
+            projectId: "worded-1a455",
+            storageBucket: "worded-1a455.appspot.com",
+            messagingSenderId: "385741553786",
+            appId: "1:385741553786:web:c9e1d0d5bb662950f9fbc3",
+            measurementId: "G-9QPQ3JE2MZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const messaging = getMessaging(app);
+
+
+        document.getElementById("pullFromFirestoreBtn").addEventListener("click", pullAllCardsFromFirebase);
+
+
+        getToken(messaging, { vapidKey: '385741553786' }).then((currentToken) => {
+            if (currentToken) {
+                console.log("✅ Token:", currentToken);
             } else {
-                sendNotification("📚 დროა გაიმეორო, მაგრამ სიტყვა ვერ მოიძებნა ამ პირობებით.");
+                console.warn('❌ Token-ის მიღება ვერ მოხერხდა.');
             }
-        }
-    });
-}, 60 * 1000); // Every minute check
-
-
-
-function sendNotification(text = null) {
-    const stored = localStorage.getItem("english_cards_app");
-    const data = stored ? JSON.parse(stored) : null;
-
-    if (data && data.cards?.length) {
-        const randomIndex = Math.floor(Math.random() * data.cards.length);
-        const card = data.cards[randomIndex];
-
-        const mainTranslation = (card.mainTranslations || []).join(', ');
-        const extraTranslation = (card.extraTranslations?.length)
-            ? `(${card.extraTranslations.join(', ')})`
-            : '';
-
-        navigator.serviceWorker.ready.then(function(reg) {
-            reg.showNotification(card.word, {
-                body: mainTranslation + (extraTranslation ? `\n${extraTranslation}` : ''),
-                icon: "/icons/icon-192.png"
-            });
+        }).catch((err) => {
+            console.error('❌ FCM token შეცდომა:', err);
         });
-    } else {
-        // თუ სიტყვები არაა, უბრალოდ გამოიტანე ზოგადი ტექსტი
-        navigator.serviceWorker.ready.then(function(reg) {
-            reg.showNotification("📚 შეხსენება", {
-                body: text || "დროა გაიმეორო სიტყვები!",
-                icon: "/icons/icon-192.png"
-            });
-        });
-    }
-}
-
-if (window.innerWidth <= 768) {
-    document.addEventListener('click', function (e) {
-        const topBar = document.querySelector('.top');
-        const toggleBtn = document.getElementById('showTopBtn');
-
-        const clickedInsideTopBar = topBar.contains(e.target);
-        const clickedToggleBtn = toggleBtn.contains(e.target);
-
-        if (!clickedInsideTopBar && !clickedToggleBtn) {
-            topBar.classList.remove('show');
-        }
-    });
-}
-
-
-
-
-// ==== გადმოტვირთვა localStorage-დან ====
-document.addEventListener('DOMContentLoaded', () => {
-    const closeBtn = document.getElementById('closePreviewBtn');
-    const previewModal = document.getElementById('cardPreviewModal');
-    const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
-    const btn = document.getElementById("downloadTemplateBtn");
-    if (quizTab) {
-        createQuizUI();
-        populateQuizTags();
-    }
-    if (btn) {
-        btn.addEventListener("click", () => {
-            const templateData = [
-                ["Word", "MainTranslations", "ExtraTranslations", "Tags", "EnglishSentences", "GeorgianSentences"]
-            ];
-
-            const worksheet = XLSX.utils.aoa_to_sheet(templateData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
-
-            XLSX.writeFile(workbook, "template.xlsx");
-        });
-    }
-
-    loadVoices();
-    loadVoicesWithDelay(); // <-- ახალი ფუნქცია
-
-    if (stored) {
-        const data = JSON.parse(stored);
-        englishSentencesInput.value = data.english || '';
-        georgianSentencesInput.value = data.georgian || '';
-    }
-    if (closeBtn && previewModal) {
-        closeBtn.addEventListener('click', () => {
-            previewModal.style.display = 'none';
-        });
-    }
-
-    document.addEventListener('click', (e) => {
-        if (e.target.classList.contains('speak-btn')) {
-            e.stopPropagation();
-            const text = e.target.dataset.text || e.target.dataset.word;
-            const extraText = e.target.dataset.extra || null;
-            const lang = e.target.dataset.lang;
-
-
-            if (lang === 'ka') {
-                speakWithVoice(text, selectedGeorgianVoice, e.target, extraText);
-            } else {
-                speakWithVoice(text, selectedVoice, e.target);
-            }
-
-        }
-    });
-
-
-
-    function speakWord(text) {
-        if (!window.speechSynthesis) {
-            alert('SpeechSynthesis არ არის ხელმისაწვდომი თქვენს ბრაუზერში');
-            return;
-        }
-
-        // 1. გავაუქმოთ ყველა მიმდინარე წაკითხვა
-        window.speechSynthesis.cancel();
-
-        // 2. მცირე დაყოვნება, რომ cancel მუშაობდეს სრულად
-        setTimeout(() => {
-            const utterance = new SpeechSynthesisUtterance(text);
-
-            if (selectedVoice) {
-                utterance.voice = selectedVoice;
-                utterance.lang = selectedVoice.lang; // სავალდებულოა, თორემ default-ით წაიკითხავს ხელახლა
-            } else {
-                utterance.lang = 'en-GB';
-            }
-
-            // 3. გავუშვათ წაკითხვა
-            window.speechSynthesis.speak(utterance);
-        }, 150); // მცირე დაყოვნება (~150ms) რომ თავიდან აირიდო ორმაგი ხმა
-    }
-
-
-
-
-    document.addEventListener('click', e => {
-        if (e.target.classList.contains('card-tag')) {
-            const tag = e.target.textContent.replace('#', '');
-
-            if (activeFilterTags.has(tag)) {
-                activeFilterTags.delete(tag);
-            } else {
-                activeFilterTags.add(tag);
-            }
-
-            renderSidebarTags();
-            filterCardsByTags();
-        }
-    });
-
-    loadCardsFromStorage();
-    sortCards();
-    // აჩვენე სწორი აიკონის მიმართულება page-ის ჩატვირთვისას
-    if (sortIcon) {
-        sortIcon.classList.remove('fa-sort-up', 'fa-sort-down');
-        sortIcon.classList.add(sortOrder === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
-    }
-
-
-    document.addEventListener('click', function(e) {
-        const tagInputFocused = tagInput.contains(e.target);
-        const dropdownFocused = tagDropdown.contains(e.target);
-
-        if (!tagInputFocused && !dropdownFocused) {
-            tagDropdown.style.display = 'none';
-        }
-    });
-    tagInput.addEventListener('blur', () => {
-        setTimeout(() => {
-            tagDropdown.style.display = 'none';
-        }, 200); // ოდნავი დაყოვნება – რომ არჩევა მოესწროს
-    });
-
-    const toggleBtn = document.getElementById("toggleDarkModeBtn");
-
-    toggleBtn.addEventListener("click", () => {
-        document.body.classList.toggle("dark");
-        const isDark = document.body.classList.contains("dark");
-        localStorage.setItem("theme", isDark ? "dark" : "light");
-
-        // შეცვალე აიკონი (optional)
-        toggleBtn.innerHTML = `<i class="fas fa-${isDark ? 'sun' : 'moon'}"></i>`;
-    });
-
-// ტემის გახსენება ჩატვირთვისას
-    window.addEventListener("DOMContentLoaded", () => {
-        const savedTheme = localStorage.getItem("theme");
-        if (savedTheme === "dark") {
-            document.body.classList.add("dark");
-            toggleBtn.innerHTML = `<i class="fas fa-sun"></i>`;
-        }
-    });
-
-    document.addEventListener('mousedown', function (e) {
-        const sidebar = document.getElementById('sidebar');
-        const toggleBtn = document.getElementById('toggleSidebarBtn');
-
-        const clickedInsideSidebar = sidebar.contains(e.target);
-        const clickedToggleBtn = toggleBtn.contains(e.target);
-
-        if (!clickedInsideSidebar && !clickedToggleBtn) {
-            sidebar.classList.remove('active');
-        }
-    });
-
-    const script = document.createElement('script');
-    script.src = 'typegame.js';
-    script.onload = () => {
-        const typingTab = document.querySelector('[data-tab-content="tab5"]');
-        if (typingTab) showTypingUI?.();
-    };
-    document.body.appendChild(script);
-
-
-    populateGlobalTags();
-
-
-
-});
-
-// Show modal
-document.getElementById('trainingBtn').addEventListener('click', () => {
-    document.getElementById('trainingModal').classList.remove('hidden');
-});
-
-// Close modal
-document.querySelector('.training-close').addEventListener('click', () => {
-    document.getElementById('trainingModal').classList.add('hidden');
-});
-
-// Switch tabs
-document.querySelectorAll('.training-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        // Tab UI
-        document.querySelectorAll('.training-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-
-        // Tab content
-        const selected = tab.dataset.tab;
-        document.querySelectorAll('.training-tab-content').forEach(content => {
-            content.classList.add('hidden');
-        });
-        document.querySelector(`[data-tab-content="${selected}"]`).classList.remove('hidden');
-    });
-});
-
-
-
-
-
-// ==== თარგმანების დამატება ====
-addMainTranslationBtn.onclick = () => addTranslation(mainTranslationInput, mainTranslations, mainTranslationTags);
-addExtraTranslationBtn.onclick = () => addTranslation(extraTranslationInput, extraTranslations, extraTranslationTags);
-mainTranslationInput.addEventListener('keypress', e => { if (e.key === 'Enter') addMainTranslationBtn.click(); });
-extraTranslationInput.addEventListener('keypress', e => { if (e.key === 'Enter') addExtraTranslationBtn.click(); });
-
-function addTranslation(inputEl, list, container) {
-    const val = inputEl.value.trim();
-    if (val && !list.includes(val)) {
-        list.push(val);
-        renderTags(container, list, list, true);
-        inputEl.value = '';
-    }
-}
-
-// ==== Tag Dropdown ფუნქციონალი ====
-tagInput.addEventListener('focus', () => showTagDropdown(''));
-tagInput.addEventListener('input', () => {
-    const value = tagInput.value.trim().toLowerCase();
-    showTagDropdown(value);
-});
-tagInput.addEventListener('keypress', e => { if (e.key === 'Enter') addTagBtn.click(); });
-addTagBtn.onclick = () => {
-    const val = tagInput.value.trim();
-    if (val && !tags.includes(val)) {
-        tags.push(val);
-        allTags.add(val);
-        renderTags(tagList, tags, tags, false);
-        tagInput.value = '';
-        tagDropdown.style.display = 'none';
-    }
-};
-
-function showTagDropdown(filterValue) {
-    const matches = [...allTags].filter(tag =>
-        tag.toLowerCase().includes(filterValue)
-    );
-
-    tagDropdown.innerHTML = '';
-    tagDropdown.style.display = matches.length ? 'block' : 'none';
-
-    matches.forEach(tag => {
-        const div = document.createElement('div');
-        div.textContent = tag;
-
-        if (tags.includes(tag)) {
-            div.style.opacity = '0.5';
-            div.style.pointerEvents = 'none';
-            div.style.fontStyle = 'italic';
-            div.textContent += ' ✓';
-        } else {
-            div.onclick = () => {
-                tags.push(tag);
-                renderTags(tagList, tags, tags, false);
-                tagInput.value = '';
-                tagDropdown.style.display = 'none';
-            };
-        }
-
-        tagDropdown.appendChild(div);
-    });
-}
-
-// ==== Tag Library CRUD ====
-function renderTagLibrary() {
-    tagListContainer.innerHTML = '';
-    [...allTags].forEach(tag => {
-        const li = document.createElement('li');
-        const input = document.createElement('input');
-        input.value = tag;
-
-        const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'შენახვა';
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'წაშლა';
-        deleteBtn.style.background = '#dc3545';
-        deleteBtn.style.color = '#fff';
-
-        saveBtn.onclick = () => {
-            const newVal = input.value.trim();
-            if (!newVal || newVal === tag) return;
-
-            // 🔁 ჩაანაცვლე `allTags`
-            allTags.delete(tag);
-            allTags.add(newVal);
-
-            // 🔁 განაახლე ყველა ბარათი
-            document.querySelectorAll('.card').forEach(card => {
-                card.querySelectorAll('.tags span').forEach(span => {
-                    if (span.textContent === `#${tag}`) span.textContent = `#${newVal}`;
+        async function pullAllCardsFromFirebase() {
+            try {
+                const snapshot = await getDocs(collection(db, "cards"));
+                const fetchedCards = [];
+
+                // ლოკალური მონაცემების წამოღება
+                const stored = localStorage.getItem("english_cards_app");
+                const localData = stored ? JSON.parse(stored) : { cards: [] };
+
+                const localWordsMap = {};
+                localData.cards.forEach(card => {
+                    localWordsMap[card.word.trim().toLowerCase()] = card;
                 });
-            });
 
-            saveToStorage();
-            renderTagLibrary();
-        };
+                snapshot.forEach(docSnap => {
+                    const cardData = docSnap.data();
+                    const wordKey = cardData.word.trim().toLowerCase();
+                    cardData.firebaseId = docSnap.id;
 
-        deleteBtn.onclick = () => {
-            // ✅ წავშალოთ მხოლოდ ბიბლიოთეკიდან
-            allTags.delete(tag);
+                    if (localWordsMap[wordKey]) {
+                        // უკვე არსებობს → განახლება
+                        (cardData.tags || []).forEach(tag => allTags.add(tag));
 
-            // ✅ ბარათებიდან კი უბრალოდ მოვაშოროთ ვიზუალურად
-            document.querySelectorAll('.card').forEach(card => {
-                card.querySelectorAll('.tags span').forEach(span => {
-                    if (span.textContent === `#${tag}`) span.remove();
+                        Object.assign(localWordsMap[wordKey], {
+                            ...cardData,
+                            firebaseId: docSnap.id,
+
+                        });
+                    } else {
+                        (cardData.tags || []).forEach(tag => allTags.add(tag));
+
+                        // ახალი სიტყვა
+                        fetchedCards.push(cardData);
+                    }
+                    renderSidebarTags();
+                    populateGlobalTags();
+                    renderTagLibrary();
+
                 });
+
+                const combinedCards = [...localData.cards, ...fetchedCards];
+
+                // შევინახოთ
+                localStorage.setItem("english_cards_app", JSON.stringify({ cards: combinedCards }));
+
+                // UI განახლება
+                if (window.loadCardsFromStorage) {
+                    document.getElementById('cardContainer').innerHTML = '';
+                    window.loadCardsFromStorage();
+
+                    // ყველა ვიზუალი განახლდეს (progress bar და mastered)
+                    document.querySelectorAll('.card').forEach(updateCardVisuals);
+
+                }
+
+                alert("✔ Firestore-დან იმპორტი წარმატებით დასრულდა!");
+
+            } catch (err) {
+                console.error("❌ Firestore Load შეცდომა:", err);
+                alert("ვერ მოხერხდა ჩამოტვირთვა Firestore-დან!");
+            }
+        }
+
+
+
+
+        document.getElementById("syncAllBtn").addEventListener("click", () => {
+            syncAllCardsToFirebase()
+                .then(() => {
+                    alert("სინქრონიზაცია დასრულდა წარმატებით!");
+                })
+                .catch(err => {
+                    console.error("სინქრონიზაციის შეცდომა:", err);
+                    alert("სინქრონიზაცია ვერ მოხერხდა!");
+                });
+        });
+
+        async function syncAllCardsToFirebase() {
+            const stored = localStorage.getItem("english_cards_app");
+            if (!stored) {
+                throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
+            }
+
+            const data = JSON.parse(stored);
+            const localWordsMap = {};
+            const fetchedCards = [];
+
+            // mapify
+            data.cards.forEach(card => {
+                const wordKey = card.word.trim().toLowerCase();
+                localWordsMap[wordKey] = card;
             });
 
-            saveToStorage();
-            renderTagLibrary();
-        };
+            const snapshot = await getDocs(collection(db, "cards"));
+            const serverMap = {};
 
-        li.appendChild(input);
-        li.appendChild(saveBtn);
-        li.appendChild(deleteBtn);
-        tagListContainer.appendChild(li);
-    });
-}
+            snapshot.forEach(docSnap => {
+                const cardData = docSnap.data();
+                const wordKey = cardData.word.trim().toLowerCase();
+                cardData.firebaseId = docSnap.id;
+
+                serverMap[docSnap.id] = cardData;
+
+                if (localWordsMap[wordKey]) {
+                    Object.assign(localWordsMap[wordKey], {
+                        ...cardData,
+                        firebaseId: docSnap.id,
+                    });
+                } else {
+                    fetchedCards.push(cardData);
+                }
+            });
 
 
-document.getElementById('addNewTagBtn').onclick = () => {
-    const val = document.getElementById('newTagInput').value.trim();
-    if (val && !allTags.has(val)) {
-        allTags.add(val);
-        document.getElementById('newTagInput').value = '';
-        renderTagLibrary();
-        saveToStorage();
-    }
-};
+            // 3. თუ localStorage-ში არის ბარათები, ატვირთე/განაახლე
+            if (data.cards && data.cards.length) {
+                for (const card of data.cards) {
+                    const docData = {
+                        word: card.word,
+                        mainTranslations: card.mainTranslations,
+                        extraTranslations: card.extraTranslations,
+                        tags: card.tags,
+                        englishSentences: card.englishSentences,
+                        georgianSentences: card.georgianSentences,
+                        progress: card.progress || 0,
+                        updated: Date.now()
+                    };
 
-// ==== Sidebar Tag Filter ====
-function renderSidebarTags() {
-    sidebarTagList.innerHTML = '';
-    [...allTags].forEach(tag => {
-        const li = document.createElement('li');
-        li.textContent = tag;
-        if (activeFilterTags.has(tag)) li.classList.add('active');
-
-        li.onclick = () => {
-            if (activeFilterTags.has(tag)) {
-                activeFilterTags.delete(tag);
-            } else {
-                activeFilterTags.add(tag);
+                    if (!card.firebaseId) {
+                        // ახალი ბარათი
+                        const docRef = await addDoc(collection(db, "cards"), docData);
+                        card.firebaseId = docRef.id;
+                    } else {
+                        // არსებული ბარათი
+                        await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
+                    }
+                }
             }
-            renderSidebarTags();
-            filterCardsByTags();
-        };
 
-        sidebarTagList.appendChild(li);
-    });
-}
+            // 4. წაშლა Firestore-ში არსებული დოკების, რომლებიც ლოკალურად აღარ არსებობს
+            const localIds = new Set(
+                (data.cards || []) // თუ cards არაა, მაინც ცარიელ მასივს გავუშვებთ
+                    .filter(c => c.firebaseId)
+                    .map(c => c.firebaseId)
+            );
 
-function filterCardsByTags() {
-    const tagsArray = [...activeFilterTags];
-
-    document.querySelectorAll('.card').forEach(card => {
-        const tagSpans = [...card.querySelectorAll('.tags span')];
-        const cardTags = tagSpans.map(span => span.textContent.replace('#', ''));
-
-        // OR ლოგიკა
-        const matches = tagsArray.some(tag => cardTags.includes(tag)) || tagsArray.length === 0;
-        card.style.display = matches ? 'block' : 'none';
-
-        // განვაახლოთ გაფილტრული თეგების სტილი
-        tagSpans.forEach(span => {
-            const tag = span.textContent.replace('#', '');
-            if (tagsArray.includes(tag)) {
-                span.classList.add('filtered');
-            } else {
-                span.classList.remove('filtered');
+            for (const docId of Object.keys(serverMap)) {
+                if (!localIds.has(docId)) {
+                    await deleteDoc(doc(db, "cards", docId));
+                }
             }
-        });
-    });
-}
 
+            // 5. შევინახოთ ახალდანიშნული firebaseId-ები
+            localStorage.setItem("english_cards_app", JSON.stringify(data));
+        }
+    </script>
 
-
-
-
-
-
-
-// ==== ძიება ====
-searchInput.addEventListener('input', () => {
-    const query = searchInput.value.trim().toLowerCase();
-    document.querySelectorAll('.card').forEach(card => {
-        const word = card.querySelector('.word').textContent.toLowerCase();
-        const translation = card.querySelector('.translation').textContent.toLowerCase();
-        const tags = card.querySelector('.tags').textContent.toLowerCase();
-        const matches = word.includes(query) || translation.includes(query) || tags.includes(query);
-        card.style.display = matches ? 'block' : 'none';
-    });
-});
-
-// ==== ქარდის CRUD ====
-saveCardBtn.onclick = () => {
-    const word = wordInput.value.trim();
-    if (!word) return;
-
-    const duplicateExists = [...document.querySelectorAll('.card')].some(card => {
-        const cardWord = card.querySelector('.word').textContent.trim().toLowerCase();
-        return cardWord === word.toLowerCase() && card !== editingCard;
-    });
-    if (duplicateExists) {
-        alert('ასეთი სიტყვა უკვე არსებობს!');
-        return;
-    }
-
-    const englishSentences = englishSentencesInput.value
-        .split('\n')
-        .map(line => line.replace(/^\d+\.\s*/, '').trim())
-        .filter(line => line !== '');
-
-    const georgianSentences = georgianSentencesInput.value
-        .split('\n')
-        .map(line => line.replace(/^\d+\.\s*/, '').trim())
-        .filter(line => line !== '');
-
-    const translationHTML = `${mainTranslations.join(', ')}<span class="extra">${extraTranslations.join(', ')}</span>`;
-    const tagHTML = tags.map(tag => {
-        const color = getColorForTag(tag);
-        return `<span class="card-tag" style="background-color: ${color}">#${tag}</span>`;
-    }).join('');
-
-    if (isEditing && editingCard) {
-        editingCard.querySelector('.word').textContent = word;
-        editingCard.querySelector('.translation').innerHTML = translationHTML;
-        editingCard.querySelector('.tags').innerHTML = tagHTML;
-        editingCard.dataset.english = JSON.stringify(englishSentences);
-        editingCard.dataset.georgian = JSON.stringify(georgianSentences);
-        editingCard.dataset.updated = Date.now(); // ✅ განახლების დრო
-
-        sortCards(); // ✅ update-ის შემდეგ გადალაგდეს
-    } else {
-        renderCardFromData({
-            word,
-            mainTranslations,
-            extraTranslations,
-            tags,
-            englishSentences,
-            georgianSentences
-        });
-    }
-
-    saveToStorage();
-    resetModal();
-};
-
-
-
-function editCard(card) {
-    const word = card.querySelector('.word').textContent;
-    const translationEl = card.querySelector('.translation');
-    const mainPart = translationEl.childNodes[0]?.textContent?.trim();
-    const extraPart = translationEl.querySelector('.extra')?.textContent?.trim();
-
-    mainTranslations = mainPart ? mainPart.split(',').map(s => s.trim()) : [];
-    extraTranslations = extraPart ? extraPart.split(',').map(s => s.trim()) : [];
-
-    const tagsEl = card.querySelector('.tags');
-    tags = [...tagsEl.querySelectorAll('span')].map(s => s.textContent.replace('#', ''));
-
-    const en = JSON.parse(card.dataset.english || '[]');
-    const ge = JSON.parse(card.dataset.georgian || '[]');
-
-    englishSentencesInput.value = en.map((s, i) => `${i + 1}. ${s}`).join('\n');
-    georgianSentencesInput.value = ge.map((s, i) => `${i + 1}. ${s}`).join('\n');
-
-    wordInput.value = word;
-    renderTags(mainTranslationTags, mainTranslations, mainTranslations, true);
-    renderTags(extraTranslationTags, extraTranslations, extraTranslations, true);
-    renderTags(tagList, tags, tags, false);
-
-    isEditing = true;
-    editingCard = card;
-    modalOverlay.style.display = 'flex';
-}
-
-
-const englishSentences = englishSentencesInput.value
-    .split('\n')
-    .map(line => line.replace(/^\\d+\\.\\s*/, '').trim())
-    .filter(line => line !== '');
-
-const georgianSentences = georgianSentencesInput.value
-    .split('\n')
-    .map(line => line.replace(/^\\d+\\.\\s*/, '').trim())
-    .filter(line => line !== '');
-
-
-
-const tagColors = new Map();
-
-function getColorForTag(tag) {
-    const hash = Array.from(tag).reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const hue = hash % 360;
-    return `hsl(${hue}, 80%, 95%)`; // პასტელური
-}
-
-
-
-
-
-
-// ==== ქარდის რენდერი ====
-function renderCardFromData(data) {
-    const {
-        word,
-        mainTranslations,
-        extraTranslations,
-        tags,
-        englishSentences = [],
-        georgianSentences = [],
-        progress = 0 // ✅ Default to 0%
-    } = data;
-
-
-    const translationHTML = `${mainTranslations.join(', ')}<span class="extra">${extraTranslations.join(', ')}</span>`;
-    const tagHTML = tags.map(tag => {
-        const color = getColorForTag(tag);
-        return `<span class="card-tag" style="background-color: ${color}">#${tag}</span>`;
-    }).join('');
-
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-        <div class="card-header">
-            <div class="card-header">
-            <button class="speak-btn" title="წაიკითხე სიტყვა" data-word="${word}"><i class="fas fa-volume-up"></i></button>
-                <h2 class="word">${word}</h2>
-                
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+    <!-- Tagify CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet"/>
+    <!-- Font Awesome (latest version) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify">
+    </script>
+</head>
+<body>
+<div class="top">
+    <div class="top-bar">
+        <div class="top-left">
+            <h1 class="title">
+                English Words
+            </h1>
+        </div>
+        <div class="top-center">
+            <button id="tagLibraryBtn">
+                <i class="fas fa-tags">
+                </i>
+                თეგები
+            </button>
+            <!-- Training Button -->
+            <button id="trainingBtn">
+                <i class="fas fa-tags">
+                </i>
+                ტრენინგი
+            </button>
+            <div class="input-container search-input">
+                <label class="material-input">
+                    <input class="form-control" id="searchInput" placeholder=" " type="text"/>
+                    <span>
+        ძიება
+       </span>
+                    <i class="fas fa-search" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #aaa;">
+                    </i>
+                </label>
             </div>
-            <div class="card-actions">
-                <i class="fas fa-edit"></i>
-                <i class="fas fa-trash-alt"></i>
+
+
+        </div>
+        <div class="top-right">
+            <button class="toolbar-btn" id="pullFromFirestoreBtn">Sync</button>
+
+
+            <button class="toolbar-btn" id="syncAllBtn">Publish</button>
+            <button id="toggleDarkModeBtn" title="Dark Mode Toggle">
+                <i class="fas fa-moon">
+                </i>
+            </button>
+            <button id="settingsBtn">
+                <i class="fas fa-cog">
+                </i>
+            </button>
+        </div>
+    </div>
+    <!-- toolbar ბლოკი -->
+    <div class="card-toolbar" id="cardToolbar">
+        <div class="toolbar-left">
+            <button id="toggleSidebarBtn">
+                <i class="fas fa-tags">
+                </i>
+            </button>
+            <div class="sorting">
+                <i class="fas fa-sort-down" id="sortDirectionIcon">
+                </i>
+                <label class="sort-label" for="sortSelect">
+                </label>
+                <select class="toolbar-select" id="sortSelect">
+                    <option value="alphabetical">
+                        ანბანური
+                    </option>
+                    <option value="updated">
+                        ბოლო
+                    </option>
+                    <option selected="" value="progress">
+                        პროგრესით
+                    </option>
+                </select>
+            </div>
+            <div class="hide-mastered-wrapper">
+                <label style="display: flex; align-items: center; gap: 5px;">
+                    <input id="hideMasteredCheckbox" type="checkbox"/>
+                    <span>
+        - ნასწავლი
+       </span>
+                </label>
             </div>
         </div>
-        <p class="translation">${translationHTML}</p>
-<div class="tags">${tagHTML}</div>
-<div class="progress-bar-container">
-    <div class="progress-bar" style="width: ${data.progress || 0}%;"></div>
-<span class="progress-label">${(parseFloat(data.progress || 0)).toFixed(1)}%</span>
+        <div class="toolbar-center">
+        </div>
+        <div class="toolbar-right">
+            <button id="notificationsBtn" class="toolbar-btn"><i class="fa-regular fa-bell"></i></button>
+
+
+            <button class="toolbar-btn" id="statsBtn" title="სტატისტიკა">
+                <i class="fas fa-chart-pie">
+                </i>
+                სტატისტიკა
+            </button>
+        </div>
+    </div>
+</div>
+<div class="card-container" id="cardContainer">
+    <!-- დინამიური ქარდები ჩნდება აქ -->
+</div>
+<!-- მოდალი -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-actions close-modal">
+            <button class="close-button" id="closeAddModalBtn">
+                ×
+            </button>
+        </div>
+        <h2>
+            ახალი სიტყვა
+        </h2>
+        <div class="input-container">
+            <label class="material-input validation">
+                <input class="form-control" id="wordInput" placeholder=" " required="" type="text" value="(ვალიდაცია)"/>
+                <span>
+       საწყისი სიტყვა
+      </span>
+            </label>
+        </div>
+        <div class="input-container tag-input">
+            <label class="material-input">
+                <input id="mainTranslationInput" placeholder=" " type="text"/>
+                <span>
+       მთავარი თარგმანი
+      </span>
+            </label>
+            <button id="addMainTranslationBtn">
+                +
+            </button>
+        </div>
+        <div class="tags-display" id="mainTranslationTags">
+        </div>
+        <div class="input-container tag-input">
+            <label class="material-input">
+                <input id="extraTranslationInput" placeholder=" " type="text"/>
+                <span>
+       დამატებითები თარგმანი
+      </span>
+            </label>
+            <button id="addExtraTranslationBtn">
+                +
+            </button>
+        </div>
+        <div class="tags-display" id="extraTranslationTags">
+        </div>
+        <div class="input-container tag-input">
+            <label class="material-input">
+                <input id="tagInput" placeholder=" " type="text"/>
+                <span>
+       ჩაწერე ან აარჩიე თეგი
+      </span>
+            </label>
+            <button id="addTagBtn">
+                +
+            </button>
+            <div class="dropdown" id="tagDropdown">
+            </div>
+        </div>
+        <div class="tags-display" id="tagList">
+        </div>
+        <div class="input-container">
+            <label class="material-input">
+                <textarea class="form-control" id="englishSentences" placeholder=" " rows="6"></textarea>
+                <span>
+       ინგლისური წინადაებები
+      </span>
+            </label>
+        </div>
+        <div class="input-container">
+            <label class="material-input">
+                <textarea class="form-control" id="georgianSentences" placeholder=" " rows="5"></textarea>
+                <span>
+       ქართული წინადაებები
+      </span>
+            </label>
+        </div>
+        <div class="modal-actions">
+            <button id="saveCardBtn">
+                შენახვა
+            </button>
+            <button id="cancelBtn">
+                გაუქმება
+            </button>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="tagLibraryModal" style="display:none;">
+    <div class="modal tag-library-modal">
+        <div class="modal-actions close-modal" id="closeTagLibraryBtn">
+            <button class="close-button" id="closeTagLibraryXBtn">
+                ×
+            </button>
+        </div>
+        <h2>
+            თეგების ბიბლიოთეკა
+        </h2>
+        <!-- ✅ პირველად გამოჩნდება -->
+        <div class="tag-library-footer">
+            <div class="input-container">
+                <label class="material-input">
+                    <input class="form-control" id="newTagInput" placeholder=" " type="text">
+                    <span>
+         ახალი თეგი
+        </span>
+                    </input>
+                </label>
+            </div>
+            <button id="addNewTagBtn">
+                <i class="fas fa-plus">
+                </i>
+                დამატება
+            </button>
+        </div>
+        <ul class="tag-list-container" id="tagListContainer">
+        </ul>
+    </div>
+</div>
+<button class="mobile-sidebar-btn" id="mobileSidebarBtn">
+    <i class="fas fa-filter">
+    </i>
+</button>
+<div class="sidebar" id="sidebar">
+    <div class="tags-header">
+        <button id="closeSidebarBtn" style="float:right;">
+            ✖
+        </button>
+        <h3>
+            თეგები
+        </h3>
+        <button class="clear-tags-btn" id="clearTagFiltersBtn">
+            ✖ ფილტრის გასუფთავება
+        </button>
+    </div>
+    <ul id="sidebarTagList">
+    </ul>
+</div>
+<div class="modal-overlay" id="cardPreviewModal" style="display: none;">
+    <!-- გადატანილი ღილაკები მოდალის შიგნით -->
+    <button class="nav-btn inside-nav left-nav fas fa-angle-left" id="prevCardBtn">
+    </button>
+    <button class="nav-btn inside-nav right-nav fas fa-angle-right" id="nextCardBtn">
+    </button>
+    <div class="modal preview-modal">
+        <div class="modal-actions close-modal">
+            <button class="close-button" id="closePreviewBtn">
+                ×
+            </button>
+        </div>
+        <div class="preview-sticky">
+            <h2 id="previewWord">
+            </h2>
+            <hr/>
+            <p id="previewTranslation">
+            </p>
+            <div class="tags" id="previewTags">
+            </div>
+        </div>
+        <div class="modal-section sentence-preview">
+            <h3>
+                ინგლისური
+            </h3>
+            <div class="sentence-list" id="previewEnglishSentences">
+            </div>
+            <h3>
+                ქართული
+            </h3>
+            <div class="sentence-list" id="previewGeorgianSentences">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-overlay" id="settingsModal" style="display: none; gap: 10px; flex-wrap: wrap;">
+    <div class="modal" style="max-width: 500px;">
+        <div class="modal-actions close-modal">
+            <button class="close-button" id="closeSettingsBtn">
+                ×
+            </button>
+        </div>
+        <h2>
+            პარამეტრები
+        </h2>
+        <!-- 🔈 Voice არჩევა -->
+        <div class="input-container">
+            <label class="material-input material-select">
+                <select id="voiceSelect" required="">
+                    <option disabled="" hidden="" selected="" value="">
+                    </option>
+                    <option value="Libby">
+                        Microsoft Libby Online
+                    </option>
+                    <option value="Maisie">
+                        Microsoft Maisie Online
+                    </option>
+                    <option value="Ryan">
+                        Microsoft Ryan Online
+                    </option>
+                    <option value="Sonia">
+                        Microsoft Sonia Online
+                    </option>
+                    <option value="Thomas">
+                        Microsoft Thomas Online
+                    </option>
+                    <option value="Ana">
+                        Microsoft Ana Online
+                    </option>
+                </select>
+                <span>
+       აირჩიე ინგლისური ხმა
+      </span>
+                <i class="fas fa-chevron-down select-arrow-icon">
+                </i>
+            </label>
+        </div>
+        <!-- ინგლისურის სიჩქარის კონტროლი -->
+        <div>
+            <label class="material-input">
+      <span>
+       ინგლისური ხმის სიჩქარე
+      </span>
+                <input id="englishRateSlider" max="2" min="0.5" step="0.1" type="range" value="1"/>
+            </label>
+        </div>
+        <!-- 🔈 Georgian Voice არჩევა -->
+        <div class="input-container">
+            <label class="material-input material-select">
+                <select id="georgianVoiceSelect" required="">
+                    <option disabled="" hidden="" selected="" value="">
+                    </option>
+                    <option value="Microsoft Eka Online (Natural)">
+                        Microsoft Eka Online (Natural) - Georgian (Georgia)
+                    </option>
+                    <option value="Microsoft Giorgi Online (Natural)">
+                        Microsoft Giorgi Online (Natural) - Georgian (Georgia)
+                    </option>
+                </select>
+                <span>
+       აირჩიე ქართული ხმა
+      </span>
+                <i class="fas fa-chevron-down select-arrow-icon">
+                </i>
+            </label>
+        </div>
+        <!-- ქართული ხმის სიჩქარის კონტროლი -->
+        <div>
+            <label class="material-input">
+      <span>
+       ქართული ხმის სიჩქარე
+      </span>
+                <input id="georgianRateSlider" max="2" min="0.5" step="0.1" type="range" value="1"/>
+            </label>
+        </div>
+        <div class="import-export-group">
+            <h3>
+                ფაილების იმპორტი / ექსპორტი
+            </h3>
+            <div class="button-row">
+                <button class="settings-btn blue" id="exportExcelBtn">
+                    📤 ექსპორტი Excel-ში
+                </button>
+                <label class="settings-btn settings-btn-force cyan" for="importExcelInput">
+                    📥 იმპორტი Excel-დან
+                </label>
+                <input accept=".xlsx" id="importExcelInput" style="display: none;" type="file">
+                <button class="settings-btn gray" id="downloadTemplateBtn">
+                    🧾 ჩამოტვირთე შაბლონი
+                </button>
+                </input>
+
+
+
+
+            </div>
+        </div>
+        <div class="modal-actions" style="margin-top: 20px;">
+            <button id="saveVoiceBtn" style="background-color: #28a745; color: white;">
+                შენახვა
+            </button>
+        </div>
+    </div>
+</div>
+<!-- Training Modal -->
+<div class="training-modal hidden" id="trainingModal">
+    <div class="training-modal-content">
+        <div class="training-wrapper">
+            <div class="training-tabs">
+                <button class="training-tab active" data-tab="quiz">
+                    QUIZ
+                </button>
+                <button class="training-tab" data-tab="tab2">
+                    HEAR
+                </button>
+                <button class="training-tab" data-tab="tab3">
+                    MIX
+                </button>
+                <button class="training-tab" data-tab="tab4">
+                    FILL
+                </button>
+                <button class="training-tab" data-tab="tab5">
+                    TYPE
+                </button>
+                <button class="training-tab" data-tab="tab6">
+                    SENTENCE
+                </button>
+                <button class="training-tab" data-tab="tab7">
+                    PUZZLE
+                </button>
+                <button class="training-close">
+                    ×
+                </button>
+            </div>
+            <div id="globalTrainingSettings">
+                <div class="tag-filter">
+                    <label for="globalTagSelect">
+                        თეგი:
+                    </label>
+                    <select id="globalTagSelect">
+                    </select>
+                </div>
+                <div class="count-filter">
+                    <label for="globalQuestionCount">
+                        რაოდენობა:
+                    </label>
+                    <input id="globalQuestionCount" max="100" min="1" type="number" value="10"/>
+                </div>
+                <label>
+                    <input id="globalReverseToggle" type="checkbox"/>
+                    რევერსი
+                </label>
+                <label>
+                    <input id="globalHideMastered" type="checkbox"/>
+                    - ნასწავლი
+                </label>
+            </div>
+        </div>
+        <div class="training-tab-content" data-tab-content="quiz" id="quizTab">
+            <h2>
+                Quiz სექცია
+            </h2>
+            <div class="quiz-settings">
+            </div>
+            <div class="quiz-container" id="quizContainer">
+                <!-- აქ ჩნდება ტესტის ინტერფეისი -->
+            </div>
+        </div>
+        <div class="training-tab-content hidden" data-tab-content="tab2">
+            <h2>
+                ტაბი 2 შინაარსი
+            </h2>
+        </div>
+        <div class="training-tab-content hidden" data-tab-content="tab3">
+            <h2>
+                ტაბი 3 შინაარსი
+            </h2>
+        </div>
+        <div class="training-tab-content hidden" data-tab-content="tab4">
+            <h2>
+                ტაბი 4 შინაარსი
+            </h2>
+        </div>
+        <div class="training-tab-content hidden" data-tab-content="tab5">
+            <h2>
+                ტაბი 5 შინაარსი
+            </h2>
+        </div>
+        <div class="training-tab-content hidden" data-tab-content="tab6">
+        </div>
+        <div class="training-tab-content hidden" data-tab-content="tab7">
+        </div>
+    </div>
+</div>
+<div class="fixed-player-wrapper">
+    <div class="player">
+        <button class="toolbar-btn" title="Previous">
+            <i class="fas fa-backward-step">
+            </i>
+        </button>
+        <button class="toolbar-btn" title="Play">
+            <i class="fas fa-play">
+            </i>
+        </button>
+        <button class="toolbar-btn" title="Stop">
+            <i class="fas fa-stop">
+            </i>
+        </button>
+        <button class="toolbar-btn" title="Next">
+            <i class="fas fa-forward-step">
+            </i>
+        </button>
+        <button class="toolbar-btn" id="shuffleCardBtn" title="Shuffle">
+            <i class="fas fa-shuffle">
+            </i>
+        </button>
+    </div>
+</div>
+<button class="mobile-toggle-btn" id="showTopBtn">
+    <i class="fas fa-sliders">
+    </i>
+</button>
+<button class="add-card-btn" id="addCardBtn">
+    <i class="fas fa-plus">
+    </i>
+</button>
+<div class="toolbar-actions">
+    <button id="deleteSelectedBtn">
+        <i class="fas fa-trash">
+        </i>
+        წაშლა
+    </button>
+    <button id="selectAllBtn">
+        <i class="fa-solid fa-check-double">
+        </i>
+    </button>
+    <button id="cancelSelectionBtn">
+        <i class="fas fa-xmark">
+        </i>
+    </button>
+</div>
+<!-- სტატისტიკის მოდალი -->
+<div class="modal-overlay" id="statsModal" style="display:none;">
+    <div class="modal" style="max-width:400px;">
+        <div class="modal-actions close-modal">
+            <button class="close-button" id="closeStatsBtn">
+                ×
+            </button>
+        </div>
+        <h2>
+            სტატისტიკა
+        </h2>
+        <div id="statsContent">
+            <!-- აქ შეავსებს JS-ი ჯამურ მონაცემებს -->
+            <p>
+                სიტყვების საერთო რაოდენობა:
+                <span id="statsTotalWords">
+       0
+      </span>
+            </p>
+            <p>
+                ნასწავლი სიტყვები:
+                <span id="statsMastered">
+       0
+      </span>
+                <span id="statsTotal2">
+       0
+      </span>
+            </p>
+            <p>
+                საშუალო პროგრესი:
+                <span id="statsAvgProgress">
+       0
+      </span>
+            </p>
+            <p>
+                გავლილი ტესტირება (სულ):
+                <span id="statsTests">
+       0
+      </span>
+            </p>
+            <p>
+                სწორი vs არასწორი:
+                <span id="statsCorrectWrong">
+       0 - 0 (0% - 0%)
+      </span>
+            </p>
+            <button id="resetStatsBtn" style="margin-top: 20px; background-color: crimson; color: white; padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer;">
+                <i class="fa-solid fa-broom">
+                </i>
+                გასუფთავება
+            </button>
+        </div>
+    </div>
 </div>
 
 
+<div class="modal-overlay" id="notificationsModal" style="display:none;">
+    <div class="modal" style="max-width: 500px;">
+        <div class="modal-actions close-modal">
+            <button class="close-button" id="closeNotificationsBtn">×</button>
+        </div>
+        <h2>შეტყობინებები</h2>
 
-    `;
-    card.dataset.progress = progress;
-    card.dataset.updated = data.updated || Date.now();
+        <div class="input-container">
+            <label class="material-input">
+                <input type="time" id="reminderTimeInput" required>
+                <span>შეიყვანე დრო</span>
+            </label>
+        </div>
 
-    card.dataset.english = JSON.stringify(englishSentences);
-    card.dataset.georgian = JSON.stringify(georgianSentences);
-    card.dataset.updated = Date.now(); // ✅ შენახვის დრო
+        <div class="weekday-checkboxes" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+            <label><input type="checkbox" value="1"> ორშ.</label>
+            <label><input type="checkbox" value="2"> სამშ.</label>
+            <label><input type="checkbox" value="3"> ოთხშ.</label>
+            <label><input type="checkbox" value="4"> ხუთშ.</label>
+            <label><input type="checkbox" value="5"> პარ.</label>
+            <label><input type="checkbox" value="6"> შაბ.</label>
+            <label><input type="checkbox" value="0"> კვ.</label>
 
-    card.querySelector('.fa-edit').onclick = () => editCard(card);
-    card.querySelector('.fa-trash-alt').onclick = () => {
-        card.remove();
-        saveToStorage();
-    };
+        </div>
 
-    card.onclick = (e) => {
-        if (
-            wasLongPress ||
-            selectionMode ||
-            card.classList.contains('selected') ||
-            e.target.classList.contains('card-tag') ||
-            e.target.closest('.card-actions') ||
-            e.target.classList.contains('speak-btn') ||
-            e.target.closest('.speak-btn')
-        ) {
-            wasLongPress = false;
-            return;
-        }
 
-        const word = card.querySelector('.word').textContent;
-        const mainPart = card.querySelector('.translation').childNodes[0]?.textContent?.trim() || '';
-        const extraPart = card.querySelector('.translation .extra')?.textContent?.trim() || '';
-        const tags = [...card.querySelectorAll('.tags span')].map(s => s.textContent.replace('#', ''));
+        <div class="input-container">
+            <label class="material-input material-select">
+                <select id="notificationTagFilter">
+                    <option value="">ყველა თეგი</option>
+                    <!-- დინამიურად დაემატება -->
+                </select>
+                <span>აირჩიე თეგი</span>
+                <i class="fas fa-chevron-down select-arrow-icon"></i>
+            </label>
+        </div>
 
-        const mainTranslations = mainPart ? mainPart.split(',').map(s => s.trim()) : [];
-        const extraTranslations = extraPart ? extraPart.split(',').map(s => s.trim()) : [];
+        <label style="display: flex; align-items: center; justify-content: center; width: 40%; height: 30px; margin: 0 auto; cursor: pointer">
 
-        const en = JSON.parse(card.dataset.english || '[]');
-        const ge = JSON.parse(card.dataset.georgian || '[]');
 
-        showCardPreview(word, mainTranslations, extraTranslations, tags, en, ge);
-    };
+            <input style="width: auto; margin-right: 10px" type="checkbox" id="excludeMasteredCheckbox" />
+            - ნასწავლი
+        </label>
 
-    addLongPressHandlers(card);
-    cardContainer.appendChild(card);
+        <button id="addReminderBtn" style="margin-bottom: 15px;">➕ დამატება</button>
 
-    sortCards(); // ✅ რეალურ დროში დალაგება
+        <ul id="reminderList"></ul>
 
 
-}
 
+    </div>
+</div>
 
-// ==== ღილაკზე მიბმა ====
-document.getElementById('syncBtn')?.addEventListener('click', async () => {
-    const btn = document.getElementById('syncBtn');
-    btn.disabled = true;
-    btn.textContent = '⏳ სინქრონიზაცია...';
-    try {
-        await syncToFirestore();
-        btn.textContent = '✅ დასრულდა!';
-    } catch (e) {
-        alert("სინქრონიზაცია ვერ მოხერხდა!");
-        btn.textContent = '❌ შეცდომა';
-    }
-    setTimeout(() => {
-        btn.disabled = false;
-    }, 2000);
-});
+<h2 class="mobile-tittle">Worded</h2>
 
-
-document.getElementById('closeAddModalBtn').onclick = () => {
-    modalOverlay.style.display = 'none';
-};
-
-document.getElementById('closeTagLibraryXBtn').onclick = () => {
-    tagLibraryModal.style.display = 'none';
-};
-
-// თუ autoplay აქტიურია და ეს მოდალიდან მოდის — მოუმატე პროგრესი
-if (isPlaying && highlightEl) {
-    const card = document.querySelector('.card.playing');
-    if (card) updateCardProgress(card, 0.3);
-}
-
-async function speakWithVoice(text, voiceObj, buttonEl = null, extraText = null, highlightEl = null) {
-    if (!window.speechSynthesis || !voiceObj) return;
-
-    // 🚫 თუ იმავე ღილაკზე მეორედ დააჭირეს — გავაუქმოთ და მოვაცილოთ highlight-ები
-    if (buttonEl && buttonEl === lastSpokenButton && speechSynthesis.speaking) {
-        speechSynthesis.cancel();
-        if (buttonEl) buttonEl.classList.remove('active');
-        if (highlightEl) highlightEl.classList.remove('highlighted-sentence');
-        lastSpokenButton = null;
-
-        return;
-    }
-
-    lastSpokenButton = buttonEl;
-
-    const speak = (txt, el) => {
-        return new Promise(resolve => {
-            const utterance = new SpeechSynthesisUtterance(txt);
-            utterance.voice = voiceObj;
-            utterance.lang = voiceObj.lang;
-
-            const rate = (voiceObj.lang === 'ka-GE')
-                ? parseFloat(localStorage.getItem(GEORGIAN_RATE_KEY) || 1)
-                : parseFloat(localStorage.getItem(ENGLISH_RATE_KEY) || 1);
-
-            utterance.rate = rate;
-
-            if (buttonEl) buttonEl.classList.add('active');
-            if (el) el.classList.add('highlighted-sentence');
-
-            utterance.onend = () => {
-                if (buttonEl) buttonEl.classList.remove('active');
-                if (el) el.classList.remove('highlighted-sentence');
-                lastSpokenButton = null;
-                resolve();
-            };
-
-            speechSynthesis.speak(utterance);
-        });
-    };
-
-    speechSynthesis.cancel();
-    await delay(100);
-
-    if (highlightEl) {
-        highlightEl.classList.add('highlighted-sentence');
-    }
-
-    if (highlightEl) {
-        highlightEl.classList.add('highlighted-sentence');
-    }
-
-    await speak(text); // ⛔️ აღარ ვუწვდით highlightEl
-
-    if (extraText) {
-        await delay(50);
-        await speak(extraText); // ⛔️ აქაც არ ვუწვდით highlightEl
-    }
-
-    if (highlightEl) {
-        highlightEl.classList.remove('highlighted-sentence');
-    }
-
-
-    if (buttonEl) {
-        buttonEl.classList.remove('active');
-    }
-
-    lastSpokenButton = null;
-}
-
-
-
-
-
-
-
-function speakWord(text, buttonEl) {
-    if (!window.speechSynthesis) return;
-
-    if (isSpeaking) {
-        speechSynthesis.cancel();
-        return;
-    }
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (selectedVoice) {
-        utterance.voice = selectedVoice;
-        utterance.lang = selectedVoice.lang;
-    }
-
-    isSpeaking = true;
-
-    if (buttonEl) {
-        buttonEl.classList.add('active');
-    }
-
-
-
-    // 🔄 ვაკვირდებით როდის დასრულდება საუბარი
-    const interval = setInterval(() => {
-        if (!speechSynthesis.speaking) {
-            clearInterval(interval);
-            isSpeaking = false;
-            if (buttonEl) {
-                buttonEl.classList.remove('active');
-            }
-        }
-    }, 100);
-}
-
-
-
-
-
-
-
-
-
-function showCardPreview(word, mainTranslations, extraTranslations, tags, englishSentences, georgianSentences) {
-    const card = [...document.querySelectorAll('.card')].find(c =>
-        c.querySelector('.word').textContent.trim().toLowerCase() === word.toLowerCase()
-    );
-    if (card) {
-        updateCardProgress(card, 0.2);
-        applyCurrentSort?.();
-    }
-
-
-    const previewWordEl = document.getElementById('previewWord');
-    previewWordEl.innerHTML = `
-  ${word}
-  <button class="speak-btn" title="წაიკითხე სიტყვა" data-word="${word}">
-    <i class="fas fa-volume-up"></i>
-  </button>
-`;
-
-    const main = mainTranslations.join('; ');
-    const extra = extraTranslations.length
-        ? `<span class="extra">${extraTranslations.join('; ')}</span>`
-        : `<span class="extra" style="visibility: hidden;">placeholder</span>`;
-
-
-// 💬 ქართულად წამკითხავი ღილაკი
-    const geoSpeakBtn = `
-    <button class="speak-btn" title="წაიკითხე ქართულად"
-    data-text="${mainTranslations.join(', ')}"
-    data-extra="${extraTranslations.join(', ')}"
-    data-lang="ka">
-      <i class="fas fa-volume-up"></i>
-    </button>
-`;
-
-    document.getElementById('previewTranslation').innerHTML = main + geoSpeakBtn + extra;
-
-
-    const tagContainer = document.getElementById('previewTags');
-    tagContainer.innerHTML = '';
-    tags.forEach(tag => {
-        const span = document.createElement('span');
-        span.textContent = `#${tag}`;
-        span.style.backgroundColor = getColorForTag(tag);
-        tagContainer.appendChild(span);
-    });
-
-
-    const enBlock = document.getElementById('previewEnglishSentences');
-    const geBlock = document.getElementById('previewGeorgianSentences');
-
-    if (enBlock) {
-        enBlock.innerHTML = '';
-        englishSentences.forEach((s, i) => {
-            const p = document.createElement('p');
-            p.innerHTML = `<span class="prefix">${i + 1}. </span>${s} <button class="speak-btn" title="Read English" data-text="${s}" data-lang="en"><i class="fas fa-volume-up"></i></button>`;
-            enBlock.appendChild(p);
-        });
-
-    }
-
-    if (geBlock) {
-        geBlock.innerHTML = '';
-        georgianSentences.forEach((s, i) => {
-            const p = document.createElement('p');
-            p.innerHTML = `<span class="prefix">${i + 1}. </span>${s} <button class="speak-btn" title="წაიკითხე ქართულად" data-text="${s}" data-lang="ka"><i class="fas fa-volume-up"></i></button>`;
-            geBlock.appendChild(p);
-        });
-
-    }
-
-    document.getElementById('cardPreviewModal').style.display = 'flex';
-    // ინახავს აქტიური ბარათის ინდექსს
-    const allCards = [...document.querySelectorAll('.card')];
-    currentCardIndex = allCards.findIndex(c =>
-        c.querySelector('.word').textContent.trim().toLowerCase() === word.toLowerCase()
-    );
-    updateNavButtons();
-    const isAutoPlaying = isPlaying;
-
-    document.getElementById('prevCardBtn').style.display = isAutoPlaying ? 'none' : 'inline-block';
-    document.getElementById('nextCardBtn').style.display = isAutoPlaying ? 'none' : 'inline-block';
-    document.getElementById('shuffleCardBtn').style.display = isAutoPlaying ? 'block' : 'block';
-
-
-}
-
-document.getElementById('prevCardBtn').onclick = () => {
-    const cards = getVisibleCards();
-    if (!cards.length) return;
-
-    if (shuffleMode) {
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * cards.length);
-        } while (randomIndex === currentCardIndex); // თავიდან არ აირჩიოს იგივე
-        currentCardIndex = randomIndex;
-    } else {
-        if (currentCardIndex > 0) {
-            currentCardIndex--;
-        }
-    }
-
-    loadCardIntoModal(cards[currentCardIndex]);
-};
-
-
-document.getElementById('nextCardBtn').onclick = () => {
-    const cards = getVisibleCards();
-    if (!cards.length) return;
-
-    if (shuffleMode) {
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * cards.length);
-        } while (randomIndex === currentCardIndex);
-        currentCardIndex = randomIndex;
-    } else {
-        if (currentCardIndex < cards.length - 1) {
-            currentCardIndex++;
-        }
-    }
-
-    loadCardIntoModal(cards[currentCardIndex]);
-};
-
-
-
-
-// --- Modal close logic
-document.getElementById('closePreviewBtn').onclick = () => {
-    document.getElementById('cardPreviewModal').style.display = 'none';
-    previewManuallyClosed = true;
-
-    // ✅ ვაჩერებთ წამკითხველს
-    isPlaying = false;
-    stopRequested = true;
-    playBtn.classList.remove('active');
-    speechSynthesis.cancel();
-
-    // 🔄 highlight-ების გაწმენდა
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-    document.querySelectorAll('.highlighted-sentence').forEach(el => el.classList.remove('highlighted-sentence'));
-};
-
-
-document.getElementById('cardPreviewModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        this.style.display = 'none';
-        previewManuallyClosed = true;
-
-        // ✅ Stop
-        isPlaying = false;
-        stopRequested = true;
-        playBtn.classList.remove('active');
-        speechSynthesis.cancel();
-
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-        document.querySelectorAll('.highlighted-sentence').forEach(el => el.classList.remove('highlighted-sentence'));
-    }
-});
-
-document.getElementById('clearTagFiltersBtn').onclick = () => {
-    activeFilterTags.clear();            // ყველა აქტიური თეგი წაიშალოს
-    renderSidebarTags();                 // საიდბარის ვიზუალური განახლება
-    filterCardsByTags();                 // ბარათების ფილტრაციის განულება
-};
-
-
-function loadCardIntoModal(card) {
-
-    // წინა highlight გაასუფთავე
-    document.getElementById('previewTranslation')?.classList.remove('highlighted-sentence');
-
-    const word = card.querySelector('.word').textContent.trim();
-    const translationEl = card.querySelector('.translation');
-    const mainPart = translationEl.childNodes[0]?.textContent?.trim() || '';
-    const extraPart = translationEl.querySelector('.extra')?.textContent?.trim() || '';
-    const tags = [...card.querySelectorAll('.tags span')].map(s => s.textContent.replace('#', ''));
-
-    const en = JSON.parse(card.dataset.english || '[]');
-    const ge = JSON.parse(card.dataset.georgian || '[]');
-
-    const mainTranslations = mainPart ? mainPart.split(',').map(s => s.trim()) : [];
-    const extraTranslations = extraPart ? extraPart.split(',').map(s => s.trim()) : [];
-
-    showCardPreview(word, mainTranslations, extraTranslations, tags, en, ge);
-    updateNavButtons();
-
-}
-document.addEventListener('keydown', (e) => {
-    const modalVisible = document.getElementById('cardPreviewModal').style.display === 'flex';
-    if (!modalVisible) return;
-
-    const cards = getVisibleCards();
-    if (!cards.length) return;
-
-    if (shuffleMode) {
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * cards.length);
-        } while (randomIndex === currentCardIndex);
-        currentCardIndex = randomIndex;
-        loadCardIntoModal(cards[currentCardIndex]);
-        return;
-    }
-
-    if (e.key === 'ArrowLeft') {
-        if (currentCardIndex > 0) {
-            currentCardIndex--;
-            loadCardIntoModal(cards[currentCardIndex]);
-        }
-    } else if (e.key === 'ArrowRight') {
-        if (currentCardIndex < cards.length - 1) {
-            currentCardIndex++;
-            loadCardIntoModal(cards[currentCardIndex]);
-        }
-    }
-});
-
-
-
-
-
-document.getElementById('exportExcelBtn').onclick = () => {
-    const cards = [...document.querySelectorAll('.card')].map(card => {
-        const word = card.querySelector('.word').textContent.trim();
-
-        const mainText = card.querySelector('.translation').childNodes[0]?.textContent?.trim() || '';
-        const extraText = card.querySelector('.translation .extra')?.textContent?.trim() || '';
-
-        const tags = [...card.querySelectorAll('.tags span')]
-            .map(s => s.textContent.replace('#', ''))
-            .join(', ');
-
-        const englishSentences = JSON.parse(card.dataset.english || '[]').join('\n');
-        const georgianSentences = JSON.parse(card.dataset.georgian || '[]').join('\n');
-
-        const progress = parseFloat(card.dataset.progress || '0');
-
-        return {
-            Word: word,
-            MainTranslations: mainText,
-            ExtraTranslations: extraText,
-            Tags: tags,
-            EnglishSentences: englishSentences,
-            GeorgianSentences: georgianSentences,
-            Progress: progress + '%'
-        };
-    });
-
-    const worksheet = XLSX.utils.json_to_sheet(cards);
-    worksheet['!cols'] = [
-        { wch: 20 },
-        { wch: 30 },
-        { wch: 30 },
-        { wch: 25 },
-        { wch: 80 },
-        { wch: 80 },
-        { wch: 10 }  // Progress column width
-    ];
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Words");
-
-    XLSX.writeFile(workbook, "english_words_with_progress.xlsx");
-};
-
-
-
-document.getElementById('importExcelInput').addEventListener('change', function (e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function (evt) {
-        const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet);
-
-        if (json.length === 0) {
-            alert("ცარიელი ფაილია");
-            return;
-        }
-
-        json.forEach(entry => {
-            const word = entry.Word?.trim();
-            if (!word) return;
-
-            const mainTranslations = (entry.MainTranslations || '').split(',').map(t => t.trim()).filter(Boolean);
-            const extraTranslations = (entry.ExtraTranslations || '').split(',').map(t => t.trim()).filter(Boolean);
-            const tags = (entry.Tags || '').split(',').map(t => t.trim()).filter(Boolean);
-            const englishLines = (entry.EnglishSentences || '').split(/\r?\n|\|/).map(s => s.trim()).filter(Boolean);
-            const georgianLines = (entry.GeorgianSentences || '').split(/\r?\n|\|/).map(s => s.trim()).filter(Boolean);
-
-            // 🟢 დაამატე პროგრესის გადმოწოდება (პროცენტით თუ მოდის, ამოიღე %)
-            let progress = 0;
-            if (entry.Progress !== undefined) {
-                let raw = String(entry.Progress).trim();
-
-                if (raw.endsWith('%')) {
-                    raw = raw.slice(0, -1).trim();
-                }
-
-                const numeric = parseFloat(raw);
-
-                // თუ 0.0–1.0 შორისაა → დატოვე როგორც არის (e.g. 0.6 → 0.6%)
-                // თუ 1-ზე მეტია → აღიქვი როგორც პროცენტი (60 → 60.0%)
-                if (!isNaN(numeric)) {
-                    progress = numeric > 1 ? parseFloat(numeric.toFixed(1)) : parseFloat((numeric * 100).toFixed(1));
-                }
-            }
-
-
-            // ✅ ბიბლიოთეკაში ჩამატება
-            tags.forEach(tag => allTags.add(tag));
-
-            const existingCard = [...document.querySelectorAll('.card')].find(card => {
-                return card.querySelector('.word').textContent.trim().toLowerCase() === word.toLowerCase();
-            });
-
-            if (existingCard) {
-                // ✅ განახლება
-                existingCard.querySelector('.translation').innerHTML =
-                    `${mainTranslations.join(', ')}<span class="extra">${extraTranslations.join(', ')}</span>`;
-
-                existingCard.querySelector('.tags').innerHTML =
-                    tags.map(tag => {
-                        const color = getColorForTag(tag);
-                        return `<span class="card-tag" style="background-color: ${color}">#${tag}</span>`;
-                    }).join('');
-
-
-
-
-                existingCard.dataset.english = JSON.stringify(englishLines);
-                existingCard.dataset.georgian = JSON.stringify(georgianLines);
-                existingCard.dataset.progress = progress;
-
-                const progressBar = existingCard.querySelector('.progress-bar');
-                const progressLabel = existingCard.querySelector('.progress-label');
-
-                if (progressBar) {
-                    progressBar.style.width = `${progress}%`;
-                    progressBar.style.backgroundColor = getProgressColor(progress);
-                }
-
-                if (progressLabel) {
-                    progressLabel.textContent = `${progress.toFixed(1)}%`;
-                }
-
-                if (progress >= 100) {
-                    existingCard.classList.add('mastered');
-                } else {
-                    existingCard.classList.remove('mastered');
-                }
-
-            } else {
-
-
-                // ✅ ახალი ქარდის შექმნა
-                renderCardFromData({
-                    word,
-                    mainTranslations,
-                    extraTranslations,
-                    tags,
-                    progress,
-                    englishSentences: englishLines,
-                    georgianSentences: georgianLines,
-                    updatedAt: new Date().toISOString()
-
-                });
-
-            }
-        });
-
-
-// 🔁 ყველა ქარდის ვიზუალური განახლება
-        document.querySelectorAll('.card').forEach(updateCardVisuals);
-
-// 🔁 sorting
-        sortCards();
-
-// 🔁 sidebar და სხვა UI
-        renderSidebarTags();
-        populateGlobalTags();
-        renderTagLibrary();
-
-// 💾 შენახვა
-        saveToStorage();
-
-
-
-    };
-
-    reader.readAsArrayBuffer(file);
-});
-
-
-
-
-function updateCardVisuals(card) {
-    const progress = parseFloat(card.dataset.progress || '0');
-
-    // 1. progress bar
-    const progressBar = card.querySelector('.progress-bar');
-    const label = card.querySelector('.progress-label');
-
-    if (progressBar) {
-        progressBar.style.width = `${progress}%`;
-        progressBar.style.backgroundColor = getProgressColor(progress);
-    }
-
-    if (label) {
-        label.textContent = `${progress.toFixed(1)}%`;
-    }
-
-    // 2. mastered კლასი
-    if (progress >= 100) {
-        card.classList.add('mastered');
-    } else {
-        card.classList.remove('mastered');
-    }
-
-    // 3. თეგების ფერები
-    const tagSpans = card.querySelectorAll('.card-tag');
-    tagSpans.forEach(span => {
-        const tag = span.textContent.replace('#', '').trim();
-        const color = getColorForTag(tag);
-        span.style.backgroundColor = color;
-    });
-}
-
-
-
-// ==== მონიშვნის რეჟიმი ====
-function selectCard(card) {
-    card.classList.add('selected');
-    selectionMode = true;
-    updateSelectionUI();
-}
-function toggleCardSelection(card) {
-    card.classList.toggle('selected');
-    updateSelectionUI();
-}
-function updateSelectionUI() {
-    const selected = document.querySelectorAll('.card.selected');
-    const anyVisible = document.querySelectorAll('.card:not([style*="display: none"])').length;
-    const hasSelected = selected.length > 0;
-
-    // ღილაკების გამოჩენა / დამალვა (უკვე გაქვს მსგავსი)
-    deleteSelectedBtn.classList.toggle('visible-button', hasSelected);
-    cancelSelectionBtn.classList.toggle('visible-button', hasSelected);
-    selectAllBtn.classList.toggle('visible-button', hasSelected && selectionMode && anyVisible);
-
-    // დაემატოს toolbarActions-ის ჩვენება/დამალვა
-    const toolbarActions = document.querySelector('.toolbar-actions');
-    if (hasSelected) {
-        toolbarActions.classList.add('visible');
-    } else {
-        toolbarActions.classList.remove('visible');
-    }
-
-    if (!hasSelected) selectionMode = false;
-}
-
-
-
-
-
-function addLongPressHandlers(card) {
-    let pressTimer = null;
-    let preventClick = false;
-
-    const longPressDuration = 600; // 600ms
-
-    const onPointerDown = (e) => {
-        // ტრადიციული mouse-ისთვის თუ e.button !== 0 -> გასვლა
-        if (e.pointerType === 'mouse' && e.button !== 0) return;
-
-        // ლონგ პრესის ტაიმერი
-        pressTimer = setTimeout(() => {
-            preventClick = true;
-            selectionMode = true;
-            selectCard(card);
-            showCancelButton();
-        }, longPressDuration);
-    };
-
-    const onPointerUpOrLeave = (e) => {
-        if (pressTimer) {
-            clearTimeout(pressTimer);
-            pressTimer = null;
-        }
-    };
-
-    // Pointer events
-    card.addEventListener('pointerdown', onPointerDown);
-    card.addEventListener('pointerup', onPointerUpOrLeave);
-    card.addEventListener('pointerleave', onPointerUpOrLeave);
-    card.addEventListener('pointercancel', onPointerUpOrLeave);
-
-    // თუ user აბრუნებს თითს ან ა.შ.
-    card.addEventListener('pointermove', () => {
-        if (pressTimer) {
-            clearTimeout(pressTimer);
-            pressTimer = null;
-        }
-    });
-
-    // click
-    card.addEventListener('click', (e) => {
-        if (preventClick) {
-            preventClick = false;
-            e.preventDefault();
-            return;
-        }
-        if (selectionMode) {
-            toggleCardSelection(card);
-        }
-    });
-}
-
-
-
-
-
-
-function showCancelButton() {
-    cancelSelectionBtn.style.display = 'inline-block';
-    deleteSelectedBtn.style.display = 'inline-block';
-}
-
-
-// ==== Tag-ების ვიზუალური ჩასმა ====
-function renderTags(container, list, sourceArray, isTranslation) {
-    container.innerHTML = '';
-    list.forEach((tag, index) => {
-        const span = document.createElement('span');
-        if (isTranslation) {
-            span.className = list === mainTranslations ? 'main-translation-tag' : 'extra-translation-tag';
-        } else {
-            span.className = 'tag';
-            span.style.backgroundColor = getColorForTag(tag);
-        }
-        if (!isTranslation) {
-            span.style.backgroundColor = getColorForTag(tag);
-        }
-
-        span.innerHTML = `${tag} <i class="fas fa-times"></i>`;
-        span.querySelector('i').onclick = () => {
-            sourceArray.splice(index, 1);
-            renderTags(container, list, sourceArray, isTranslation);
-        };
-        container.appendChild(span);
-    });
-}
-
-
-function updateNavButtons() {
-    const cards = [...document.querySelectorAll('.card')];
-
-    if (shuffleMode) {
-        // Shuffle რეჟიმში — ღილაკები ყოველთვის აქტიურია
-        document.getElementById('prevCardBtn').disabled = false;
-        document.getElementById('nextCardBtn').disabled = false;
-    } else {
-        // ჩვეულებრივ რეჟიმში ბლოკი კიდეებზე
-        document.getElementById('prevCardBtn').disabled = currentCardIndex <= 0;
-        document.getElementById('nextCardBtn').disabled = currentCardIndex >= cards.length - 1;
-    }
-}
-
-
-
-// ==== Reset Modal ====
-function resetModal() {
-    modalOverlay.style.display = 'none';
-    wordInput.value = '';
-    mainTranslationInput.value = '';
-    extraTranslationInput.value = '';
-    tagInput.value = '';
-    englishSentencesInput.value = '';  // ცარიელდება
-    georgianSentencesInput.value = ''; // ცარიელდება
-    mainTranslations = [];
-    extraTranslations = [];
-    tags = [];
-    isEditing = false;
-    editingCard = null;
-    tagDropdown.style.display = 'none';
-    renderTags(mainTranslationTags, [], [], true);
-    renderTags(extraTranslationTags, [], [], true);
-    renderTags(tagList, [], [], false);
-}
-
-
-// ==== LocalStorage save/load ====
-function saveToStorage() {
-    const cards = [...document.querySelectorAll('.card')].map(card => {
-        const word = card.querySelector('.word').textContent;
-        const mainText = card.querySelector('.translation').childNodes[0]?.textContent?.trim();
-        const extraText = card.querySelector('.translation .extra')?.textContent?.trim();
-        const tagList = [...card.querySelectorAll('.tags span')].map(span => span.textContent.replace('#', ''));
-
-        const englishSentences = JSON.parse(card.dataset.english || '[]');
-        const georgianSentences = JSON.parse(card.dataset.georgian || '[]');
-
-        return {
-            word,
-            mainTranslations: mainText ? mainText.split(',').map(s => s.trim()) : [],
-            extraTranslations: extraText ? extraText.split(',').map(s => s.trim()) : [],
-            tags: tagList,
-            englishSentences,
-            georgianSentences,
-            progress: parseFloat(card.dataset.progress || 0)
-
-        };
-    });
-
-    const data = {
-        cards,
-        tagLibrary: [...allTags]
-    };
-
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-}
-
-function loadCardsFromStorage() {
-    const stored = localStorage.getItem("english_cards_app");
-    if (!stored) return;
-    const data = JSON.parse(stored);
-
-    // 1. გაწმენდა
-    allTags.clear();
-
-    // 2. თუა tagLibrary, ჩავამატოთ `allTags`-ში
-    if (data.tagLibrary && data.tagLibrary.length) {
-        data.tagLibrary.forEach(tag => allTags.add(tag));
-    }
-
-    // 3. შემდეგ გავივლით თითო ბარათს და ვახატავთ
-    data.cards.forEach(cardData => {
-        // თუ ბარათშია tags, შევიტანოთ allTags-შიც
-        if (cardData.tags) {
-            cardData.tags.forEach(t => allTags.add(t));
-        }
-        renderCardFromData(cardData);
-    });
-
-    // 4. დაბოლოს, გამოვიძახოთ	renderTagLibrary() – რომ თეგების ბიბლიოტეკაც წარმოიქმნას
-    renderTagLibrary();
-}
-
+</body>
+</html>
