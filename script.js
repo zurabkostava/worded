@@ -875,6 +875,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewModal = document.getElementById('cardPreviewModal');
     const stored = localStorage.getItem(TEXTAREA_STORAGE_KEY);
     const btn = document.getElementById("downloadTemplateBtn");
+
+
     if (quizTab) {
         createQuizUI();
         populateQuizTags();
