@@ -159,15 +159,13 @@
         });  
   
         async function syncAllCardsToFirebase() {
-    const progressLabel = document.getElementById("syncProgress");
-    progressLabel.textContent = "0%";
-
+    const progressLabel = document.getElementById("syncProgressLabel");
     const stored = localStorage.getItem("english_cards_app");
     if (!stored) throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
 
     const data = JSON.parse(stored);
-    const total = data.cards.length;
-    let count = 0;
+    const totalCards = data.cards.length || 1; // არ დავუშვათ division by zero
+    let uploaded = 0;
 
     for (const card of data.cards) {
         const docData = {
@@ -188,26 +186,17 @@
             await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
         }
 
-        count++;
-        const percent = ((count / total) * 100).toFixed(1);
-        progressLabel.textContent = `${percent}%`;
+        uploaded++;
+        const percent = ((uploaded / totalCards) * 100).toFixed(1);
+        progressLabel.textContent = `— ${percent}%`;
     }
 
-    // Delete obsolete docs
-    const snapshot = await getDocs(collection(db, "cards"));
-    const serverIds = new Set();
-    snapshot.forEach(docSnap => serverIds.add(docSnap.id));
+    // წაშლის ლოგიკა დარჩეს უცვლელი...
 
-    const localIds = new Set(data.cards.map(c => c.firebaseId));
-    for (const id of serverIds) {
-        if (!localIds.has(id)) {
-            await deleteDoc(doc(db, "cards", id));
-        }
-    }
-
+    // შენახვა
     localStorage.setItem("english_cards_app", JSON.stringify(data));
-    progressLabel.textContent = "✔";
-        }
+    progressLabel.textContent = ""; // დასრულების შემდეგ გასუფთავება
+}
     </script>  
   
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>  
