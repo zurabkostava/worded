@@ -31,7 +31,7 @@
     <script src="tts.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
+            navigator.serviceWorker.register('firebase-messaging-sw.js')
                 .then(() => console.log("✅ Service Worker რეგისტრირებულია"))
                 .catch(err => console.error("❌ SW error:", err));
         }
@@ -72,7 +72,10 @@
         document.getElementById("pullFromFirestoreBtn").addEventListener("click", pullAllCardsFromFirebase);
 
 
-        getToken(messaging, { vapidKey: '385741553786' }).then((currentToken) => {
+        getToken(messaging, {
+            vapidKey: 'BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves'
+        })
+            .then((currentToken) => {
             if (currentToken) {
                 console.log("✅ Token:", currentToken);
             } else {
