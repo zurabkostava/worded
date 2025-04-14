@@ -221,6 +221,9 @@
             localStorage.setItem("english_cards_app", JSON.stringify(data));
         }
 
+
+
+
         async function syncAllCardsToFirebase() {
             try {
                 const stored = localStorage.getItem("english_cards_app");
@@ -285,7 +288,9 @@
 
                     if (serverMap[wordKey]) {
                         const existing = serverMap[wordKey];
-                        await setDoc(doc(db, "cards", existing.id), docData, { merge: true });
+                        if (hasCardChanged(docData, existing)) {
+                            await setDoc(doc(db, "cards", existing.id), docData, { merge: true });
+                        }
                         card.firebaseId = existing.id;
                         uploadedIds.add(existing.id);
                     } else {
@@ -312,6 +317,25 @@
                 console.error("❌ Publish სინქრონის შეცდომა:", err);
                 throw err;
             }
+        }
+        function hasCardChanged(localCard, serverCard) {
+            const fieldsToCheck = [
+                'word',
+                'mainTranslations',
+                'extraTranslations',
+                'tags',
+                'englishSentences',
+                'georgianSentences',
+                'progress'
+            ];
+
+            for (const field of fieldsToCheck) {
+                const localVal = JSON.stringify(localCard[field] || []);
+                const serverVal = JSON.stringify(serverCard[field] || []);
+                if (localVal !== serverVal) return true;
+            }
+
+            return false;
         }
 
     </script>
