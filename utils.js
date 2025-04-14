@@ -1,6 +1,8 @@
 //utils.js
 
 function updateCardProgress(card, delta) {
+    autoSyncOnChange?.();
+
     let current = parseFloat(card.dataset.progress || '0');
     current = Math.max(0, Math.min(100, current + delta));
     card.dataset.progress = current.toFixed(1);
@@ -25,6 +27,7 @@ function updateCardProgress(card, delta) {
     }
 
     if (typeof saveToStorage === 'function') saveToStorage();
+
 }
 
 function getProgressColor(percent) {
