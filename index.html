@@ -193,102 +193,127 @@
                 console.error("Publish error:", publishError);
             }
         });
+
+        function refreshLocalDataFromDOM() {
+            const stored = localStorage.getItem("english_cards_app");
+            if (!stored) return;
+            const data = JSON.parse(stored);
+            const domCards = document.querySelectorAll('.card');
+            const domMap = {};
+
+            domCards.forEach(card => {
+                const word = card.querySelector('.word')?.textContent.trim().toLowerCase();
+                if (!word) return;
+
+                const progress = parseFloat(card.dataset.progress || 0);
+                const updated = parseInt(card.dataset.updated || Date.now());
+                domMap[word] = { progress, updated };
+            });
+
+            data.cards.forEach(card => {
+                const key = card.word.trim().toLowerCase();
+                if (domMap[key]) {
+                    card.progress = domMap[key].progress;
+                    card.updated = domMap[key].updated;
+                }
+            });
+
+            localStorage.setItem("english_cards_app", JSON.stringify(data));
+        }
+
         async function syncAllCardsToFirebase() {
             try {
                 const stored = localStorage.getItem("english_cards_app");
-                if (!stored) {
-                    throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
-                }
+                if (!stored) throw new Error("ლოკალურ შენახვაში მონაცემები ვერ მოიძებნა");
 
                 const data = JSON.parse(stored);
-                const localWordsMap = {};
-                const fetchedCards = [];
-
-                // mapify
-                data.cards.forEach(card => {
-                    const wordKey = card.word.trim().toLowerCase();
-                    localWordsMap[wordKey] = card;
+                const domCards = document.querySelectorAll('.card');
+                const domMap = {};
+                domCards.forEach(card => {
+                    const word = card.querySelector('.word')?.textContent.trim().toLowerCase();
+                    const progress = parseFloat(card.dataset.progress || 0);
+                    const updated = parseInt(card.dataset.updated || Date.now());
+                    if (word) {
+                        domMap[word] = { progress, updated };
+                    }
                 });
 
+                // ავსახოთ DOM-ის ცვლილებები localStorage-ზე
+                data.cards.forEach(card => {
+                    const wordKey = card.word.trim().toLowerCase();
+                    if (domMap[wordKey]) {
+                        card.progress = domMap[wordKey].progress;
+                        card.updated = domMap[wordKey].updated;
+                    }
+                });
+
+                // უკვე არსებული firebase ბარათების ჩამოტვირთვა
                 const snapshot = await getDocs(collection(db, "cards"));
                 const serverMap = {};
-
                 snapshot.forEach(docSnap => {
                     const cardData = docSnap.data();
                     const wordKey = cardData.word.trim().toLowerCase();
-                    cardData.firebaseId = docSnap.id;
-
-                    serverMap[docSnap.id] = cardData;
-
-                    if (localWordsMap[wordKey]) {
-                        Object.assign(localWordsMap[wordKey], {
-                            ...cardData,
-                            firebaseId: docSnap.id,
-                        });
-                    } else {
-                        fetchedCards.push(cardData);
-                    }
+                    serverMap[wordKey] = { ...cardData, id: docSnap.id };
                 });
 
-                // 3. თუ localStorage-ში არის ბარათები, ატვირთე/განაახლე
-                // 3. თუ localStorage-ში არის ბარათები, ატვირთე/განაახლე
-                if (data.cards && data.cards.length) {
-                    // 💡 გადავლა ჯერ DOM-ზე, რათა progress განახლებული აიღოს (UI-დან)
-                    const domCards = document.querySelectorAll('.card');
-                    const domMap = {};
-                    domCards.forEach(card => {
-                        const word = card.querySelector('.word')?.textContent.trim().toLowerCase();
-                        const progress = parseFloat(card.dataset.progress || 0);
-                        if (word) domMap[word] = progress;
-                    });
+                const uploadedIds = new Set();
 
-                    for (const card of data.cards) {
-                        const wordKey = card.word.trim().toLowerCase();
-                        card.progress = domMap[wordKey] || 0; // ⬅ აიღე განახლებული მნიშვნელობა DOM-დან
+                for (const card of data.cards) {
+                    const wordKey = card.word.trim().toLowerCase();
 
-                        const docData = {
-                            word: card.word,
-                            mainTranslations: card.mainTranslations,
-                            extraTranslations: card.extraTranslations,
-                            tags: card.tags,
-                            englishSentences: card.englishSentences,
-                            georgianSentences: card.georgianSentences,
-                            progress: card.progress || 0,
-                            updated: Date.now()
-                        };
+                    // 🎯 ამოიღე progress პირდაპირ DOM-დან, თუ არსებობს
+                    const domCard = [...document.querySelectorAll('.card')].find(c =>
+                        c.querySelector('.word').textContent.trim().toLowerCase() === wordKey
+                    );
 
-                        if (!card.firebaseId) {
-                            const docRef = await addDoc(collection(db, "cards"), docData);
-                            card.firebaseId = docRef.id;
-                        } else {
-                            await setDoc(doc(db, "cards", card.firebaseId), docData, { merge: true });
-                        }
+                    if (domCard) {
+                        const newProgress = parseFloat(domCard.dataset.progress || 0);
+                        card.progress = isNaN(newProgress) ? 0 : parseFloat(newProgress.toFixed(1));
+                        card.updated = parseInt(domCard.dataset.updated || Date.now());
+                    }
+
+                    const docData = {
+                        word: card.word,
+                        mainTranslations: card.mainTranslations || [],
+                        extraTranslations: card.extraTranslations || [],
+                        tags: card.tags || [],
+                        englishSentences: card.englishSentences || [],
+                        georgianSentences: card.georgianSentences || [],
+                        progress: card.progress,
+                        updated: card.updated
+                    };
+
+                    if (serverMap[wordKey]) {
+                        const existing = serverMap[wordKey];
+                        await setDoc(doc(db, "cards", existing.id), docData, { merge: true });
+                        card.firebaseId = existing.id;
+                        uploadedIds.add(existing.id);
+                    } else {
+                        const docRef = await addDoc(collection(db, "cards"), docData);
+                        card.firebaseId = docRef.id;
+                        uploadedIds.add(docRef.id);
                     }
                 }
 
 
-                // 4. წაშლა Firestore-ში არსებული დოკების, რომლებიც ლოკალურად აღარ არსებობს
-                const localIds = new Set(
-                    (data.cards || []) // თუ cards არაა, მაინც ცარიელ მასივს გავუშვებთ
-                        .filter(c => c.firebaseId)
-                        .map(c => c.firebaseId)
-                );
-
-                for (const docId of Object.keys(serverMap)) {
-                    if (!localIds.has(docId)) {
-                        await deleteDoc(doc(db, "cards", docId));
+                // წაშლა მხოლოდ იმ ჩანაწერების, რომლებიც აღარ არსებობს ლოკალურად
+                const firebaseIdsToKeep = new Set(data.cards.map(c => c.firebaseId));
+                for (const [key, serverCard] of Object.entries(serverMap)) {
+                    if (!firebaseIdsToKeep.has(serverCard.id)) {
+                        await deleteDoc(doc(db, "cards", serverCard.id));
                     }
                 }
 
-                // 5. შევინახოთ ახალდანიშნული firebaseId-ები
+                // განახლებული firebaseId-ების შენახვა
                 localStorage.setItem("english_cards_app", JSON.stringify(data));
+                return true;
 
-                return true; // Indicate success
             } catch (err) {
-                console.error("სინქრონიზაციის შეცდომა:", err);
-                throw err; // Re-throw the error
+                console.error("❌ Publish სინქრონის შეცდომა:", err);
+                throw err;
             }
         }
+
     </script>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
