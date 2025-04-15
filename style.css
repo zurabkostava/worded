@@ -21,6 +21,7 @@ body.dark {
     color: #dfdddd;
 }
 
+
 .dark .translation span{
     color: #777676;
 }
@@ -35,6 +36,8 @@ body.dark {
     background-color: #1a1a1a;
     border-right: 1px solid #333;
 }
+
+.dark
 
 
 
@@ -166,7 +169,10 @@ body.dark {
     color: #eee;
 }
 
-
+#appLogo{
+    width: 120px;
+    padding: 4px;
+}
 #toggleDarkModeBtn {
     padding: 6px 12px;
     border: none;
@@ -403,6 +409,8 @@ body.dark #toggleDarkModeBtn:hover {
     font-size: 20px;
     color: #999;
     cursor: pointer;
+    z-index: 9999999999999999999999999;
+
 }
 
 .training-tab-content {
@@ -522,11 +530,7 @@ body.dark #toggleDarkModeBtn:hover {
     font-size: 1rem;
 }
 
-#sidebarTagList li.active {
-    background-color: #0077cc;
-    color: white;
-    font-weight: bold;
-}
+
 
 
 .sidebar {
@@ -1516,7 +1520,6 @@ textarea {
 }
 
 .toolbar-left {
-    flex: 1;
     display: flex;
     align-items: center;
     gap: 20px;
@@ -2233,7 +2236,6 @@ textarea {
     display: none;
     position: fixed;
     margin-top: 10px;
-    z-index: 9999999999999999999;
     top: 0;
     left: 50%;
     transform: translateX(-50%)
@@ -2386,6 +2388,7 @@ textarea {
         border-radius: 4px;
         color: #ffffff;
         font-size: 1.5rem;
+
     }
     /* თავად მოკრიალე ეს Selector-ები შენს HTML სტრუქტურაზე */
     .training-modal-content {
@@ -2435,6 +2438,12 @@ textarea {
     }
     .training-tab {
         white-space: normal; /* ისე, რომ ტექსტი ჩამოვარდეს */
+    }
+    .hide-mastered-wrapper span{
+        font-size: 12px;
+    }
+    .toolbar-left{
+        gap: 4px;
     }
 
 }
@@ -2487,3 +2496,72 @@ textarea {
     90%  { opacity: 1; }
     100% { opacity: 0; transform: translateY(20px); }
 }
+.sidebar-tag-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 6px;
+
+}
+
+.sidebar-tag-item span {
+    flex: 1;
+}
+
+.tag-add-container {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 8px;
+}
+.sidebar-tag-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 3px 0;
+    padding: 2px 6px;
+
+}
+.sidebar-tag-item input {
+    padding: 4px;
+    font-size: 14px;
+}
+.sidebar-tag-item button {
+    padding: 2px 6px;
+}
+
+.sidebar-tag-item button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+    color: #b6b6b6;
+}
+
+.sidebar-tag-item button:hover {
+    color: #858484;
+}
+
+
+.tag-count-badge {
+    background-color: rgba(231, 235, 255, 0.26);
+    color: #1c1c1c;
+    max-width: 25px;
+    padding: 2px 5px;
+    font-size: 12px;
+    border-radius: 12px;
+    font-weight: bold;
+}
+.sidebar-tag-item .active {
+    font-weight: bold;
+}
+.sidebar-tag-item.active {
+    background-color: rgba(0, 119, 204, 0.67);
+    color: white;
+    border-radius: 6px;
+}
+
+
