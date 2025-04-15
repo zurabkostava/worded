@@ -50,7 +50,6 @@ function populateMWTags() {
     });
 }
 
-// === სტატისტიკის დამხმარე ფუნქციები ===
 function incrementStat(key, amount) {
     const currentVal = parseFloat(localStorage.getItem(key) || '0');
     localStorage.setItem(key, (currentVal + amount).toString());
@@ -99,11 +98,8 @@ function showNextMWQuestion() {
     const mainTranslation = mainText.split(',')[0]?.trim();
     const correctWord = mwReverse ? mainTranslation : word;
 
-    if (!correctWord || correctWord.length < 4) {
-        mwCurrentIndex++;
-        showNextMWQuestion();
-        return;
-    }
+
+
 
     const allIndices = Array.from({ length: correctWord.length }, (_, i) => i);
     const missingIndices = mwFullBlankMode
@@ -193,7 +189,7 @@ function showNextMWQuestion() {
         showHintBtn.style.display = 'none';
 
         if (!hintUsed) {
-            updateCardProgress(card, -0.5);
+            updateRealCardProgress(correctWord, -0.5);
             applyCurrentSort?.();
             hintUsed = true;
         }
@@ -207,7 +203,6 @@ function showNextMWQuestion() {
         const isCorrect = result === correctWord;
         const delta = mwFullBlankMode ? 3 : 2;
 
-        // ✅ Live სტატისტიკა
         incrementStat('TOTAL_TESTS', 1);
         if (isCorrect) {
             incrementStat('TOTAL_CORRECT', 1);
@@ -216,7 +211,7 @@ function showNextMWQuestion() {
             incrementStat('TOTAL_WRONG', 1);
         }
 
-        updateCardProgress(card, isCorrect ? delta : -delta);
+        updateRealCardProgress(correctWord, isCorrect ? delta : -delta);
         applyCurrentSort?.();
 
         document.querySelectorAll('.mw-letter').forEach(el => {
@@ -228,6 +223,13 @@ function showNextMWQuestion() {
             showNextMWQuestion();
         }, 1500);
     }
+}
+
+function updateRealCardProgress(wordText, delta) {
+    const card = [...document.querySelectorAll('.card')].find(c =>
+        c.querySelector('.word')?.textContent.trim().toLowerCase() === wordText.toLowerCase()
+    );
+    if (card) updateCardProgress(card, delta);
 }
 
 function generateRandomMissingIndices(word) {
