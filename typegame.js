@@ -58,7 +58,9 @@ function showNextTyping() {
     const word = card.querySelector('.word').textContent.trim();
     const main = card.querySelector('.translation').childNodes[0]?.textContent?.trim() || '';
     const extra = card.querySelector('.translation .extra')?.textContent?.trim() || '';
-    const correctAnswers = tiReverse ? [word] : [...main.split(','), ...extra.split(',')].map(t => t.trim()).filter(Boolean);
+    const correctAnswers = tiReverse
+        ? [word]
+        : [...main.split(','), ...extra.split(',')].map(t => t.trim()).filter(Boolean);
     const shown = tiReverse ? (main.split(',')[0]?.trim() || '') : word;
 
     const game = document.getElementById('tiGame');
@@ -81,17 +83,16 @@ function showNextTyping() {
         const feedback = document.getElementById('tiFeedback');
         const isCorrect = correctAnswers.some(ans => ans.toLowerCase() === val.toLowerCase());
 
-        // 🎯 სტატისტიკა
         incrementStat('TOTAL_TESTS', 1);
         incrementStat(isCorrect ? 'TOTAL_CORRECT' : 'TOTAL_WRONG', 1);
 
         if (isCorrect) {
             feedback.innerHTML = `<span style="color:green;">სწორია!</span>`;
-            updateCardProgress(card, 3);
+            updateCardByText(word, 3);
             tiCorrect++;
         } else {
             feedback.innerHTML = `<span style="color:red;">არასწორია. სწორი პასუხია: <strong>${correctAnswers[0]}</strong></span>`;
-            updateCardProgress(card, -3);
+            updateCardByText(word, -3);
         }
         applyCurrentSort?.();
 
@@ -114,12 +115,19 @@ function showNextTyping() {
         if (i < target.length) {
             input.value = target.substring(0, i + 1);
             tiHintIndex = i + 1;
-            updateCardProgress(card, -tiProgressPenalty);
+            updateCardByText(word, -tiProgressPenalty);
             applyCurrentSort?.();
         }
     };
 
     document.getElementById('tiInput').focus();
+}
+
+function updateCardByText(wordText, delta) {
+    const card = [...document.querySelectorAll('.card')].find(c =>
+        c.querySelector('.word')?.textContent.trim().toLowerCase() === wordText.toLowerCase()
+    );
+    if (card) updateCardProgress(card, delta);
 }
 
 function showTypingResult() {
@@ -130,13 +138,17 @@ function showTypingResult() {
     `;
 }
 
-// 🧠 სტატისტიკის დამხმარეები
 function incrementStat(key, amount) {
     const val = parseInt(localStorage.getItem(key) || '0');
     localStorage.setItem(key, val + amount);
 }
+
 function getStat(key) {
     return parseInt(localStorage.getItem(key) || '0');
+}
+
+function shuffleArray(arr) {
+    return [...arr].sort(() => 0.5 - Math.random());
 }
 
 document.addEventListener('DOMContentLoaded', () => {
