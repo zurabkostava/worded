@@ -152,14 +152,20 @@ async function showNextWordhear() {
 
             // ✅ ინკრემენტი თითოეულ პასუხზე
             incrementStat('TOTAL_TESTS', 1);
+            const word = currentCard.querySelector('.word').textContent.trim().toLowerCase();
+            const realCard = [...document.querySelectorAll('.card')].find(c =>
+                c.querySelector('.word').textContent.trim().toLowerCase() === word
+            );
+
             if (isCorrect) {
                 wordhearCorrectAnswers++;
                 incrementStat('TOTAL_CORRECT', 1);
-                updateCardProgress(currentCard, +1);
+                if (realCard) updateCardProgress(realCard, +1);
             } else {
                 incrementStat('TOTAL_WRONG', 1);
-                updateCardProgress(currentCard, -1);
+                if (realCard) updateCardProgress(realCard, -1);
             }
+
             applyCurrentSort?.();
 
             const reveal = document.getElementById('correctAnswerReveal');
