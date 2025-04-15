@@ -96,6 +96,10 @@ function renderNextQuestion() {
     }
 
     const currentCard = quizCards[currentQuestionIndex];
+    const word = currentCard.querySelector('.word').textContent.trim().toLowerCase();
+    const realCard = [...document.querySelectorAll('.card')].find(c =>
+        c.querySelector('.word').textContent.trim().toLowerCase() === word
+    );
     const correctWord = currentCard.querySelector('.word').textContent.trim();
     const mainText = currentCard.querySelector('.translation')?.childNodes[0]?.textContent?.trim() || '';
     const mainTranslations = mainText.split(',').map(t => t.trim()).filter(Boolean);
@@ -147,10 +151,14 @@ function renderNextQuestion() {
             if (isCorrect) {
                 btn.classList.add('correct');
                 correctAnswers++;
-                updateCardProgress(currentCard, +1);
+                const word = currentCard.querySelector('.word').textContent.trim().toLowerCase();
+                const realCard = [...document.querySelectorAll('.card')].find(c =>
+                    c.querySelector('.word').textContent.trim().toLowerCase() === word
+                );
+                if (realCard) updateCardProgress(realCard, +1);
             } else {
                 btn.classList.add('incorrect');
-                updateCardProgress(currentCard, -1);
+                if (realCard) updateCardProgress(realCard, -1);
                 buttons.forEach(b => {
                     if (correctChoices.includes(b.textContent)) {
                         b.classList.add('correct');
