@@ -1,4 +1,4 @@
-// ==== STAT FUNCTIONS ====
+// mix.js ====
 function incrementStat(key, amount = 1) {
     const current = parseInt(localStorage.getItem(key) || '0');
     localStorage.setItem(key, current + amount);
@@ -187,10 +187,16 @@ function updateCardProgressFromText(left, right, delta) {
         const l = mixReverse ? p.ka : p.en;
         const r = mixReverse ? p.en : p.ka;
         if (l === left || r === right) {
-            updateCardProgress(p.card, delta);
+            // მოძებნე რეალური ბარათი სიტყვით
+            const word = p.en.toLowerCase();
+            const realCard = [...document.querySelectorAll('.card')].find(c =>
+                c.querySelector('.word').textContent.trim().toLowerCase() === word
+            );
+            if (realCard) updateCardProgress(realCard, delta);
         }
     });
 }
+
 
 function showMixResults() {
     mixResultContainer.innerHTML = `
