@@ -88,21 +88,16 @@ function showNextSentence() {
             const feedback = document.getElementById('senFeedback');
             const isCorrect = val.toLowerCase() === correctWord.toLowerCase();
 
-            // ✅ სტატისტიკა
             incrementStat('TOTAL_TESTS', 1);
-            if (isCorrect) {
-                incrementStat('TOTAL_CORRECT', 1);
-            } else {
-                incrementStat('TOTAL_WRONG', 1);
-            }
+            incrementStat(isCorrect ? 'TOTAL_CORRECT' : 'TOTAL_WRONG', 1);
 
             if (isCorrect) {
                 feedback.innerHTML = `<span style="color:green;">სწორია!</span>`;
-                updateCardProgress(card, 4);
+                updateCardByText(correctWord, 4);
                 senCorrect++;
             } else {
                 feedback.innerHTML = `<span style="color:red;">არასწორია. სწორი იყო: <strong>${correctWord}</strong></span>`;
-                updateCardProgress(card, -4);
+                updateCardByText(correctWord, -4);
             }
 
             let i = 0;
@@ -131,6 +126,13 @@ function showNextSentence() {
     });
 }
 
+function updateCardByText(wordText, delta) {
+    const card = [...document.querySelectorAll('.card')].find(c =>
+        c.querySelector('.word')?.textContent.trim().toLowerCase() === wordText.toLowerCase()
+    );
+    if (card) updateCardProgress(card, delta);
+}
+
 function showSentenceResult() {
     const game = document.getElementById('senGame');
     game.innerHTML = `
@@ -143,7 +145,6 @@ function shuffleArray(arr) {
     return [...arr].sort(() => 0.5 - Math.random());
 }
 
-// სტატისტიკის ფუნქციები
 function incrementStat(key, amount) {
     const val = parseInt(localStorage.getItem(key) || '0');
     localStorage.setItem(key, val + amount);
