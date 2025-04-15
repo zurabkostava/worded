@@ -21,11 +21,6 @@ const addTagBtn = document.getElementById('addTagBtn');
 const tagList = document.getElementById('tagList');
 const tagDropdown = document.getElementById('tagDropdown');
 
-const tagLibraryBtn = document.getElementById('tagLibraryBtn');
-const tagLibraryModal = document.getElementById('tagLibraryModal');
-const closeTagLibraryBtn = document.getElementById('closeTagLibraryBtn');
-const tagListContainer = document.getElementById('tagListContainer');
-
 const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
 const closeSidebarBtn = document.getElementById('closeSidebarBtn');
 const sidebar = document.getElementById('sidebar');
@@ -674,11 +669,6 @@ cancelSelectionBtn.onclick = () => {
     updateSelectionUI();
 };
 
-tagLibraryBtn.onclick = () => {
-    tagLibraryModal.style.display = 'flex';
-    renderTagLibrary();
-};
-closeTagLibraryBtn.onclick = () => tagLibraryModal.style.display = 'none';
 
 toggleSidebarBtn.onclick = () => {
     sidebar.classList.toggle('active');
@@ -1032,18 +1022,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDark = document.body.classList.contains("dark");
         localStorage.setItem("theme", isDark ? "dark" : "light");
 
-        // შეცვალე აიკონი (optional)
         toggleBtn.innerHTML = `<i class="fas fa-${isDark ? 'sun' : 'moon'}"></i>`;
+
+        // 🔁 ლოგოს შეცვლა
+        const logoEl = document.getElementById("appLogo");
+        if (logoEl) {
+            logoEl.data = isDark ? "/icons/logo-dark.svg" : "/icons/logo.svg";
+        }
     });
 
-// ტემის გახსენება ჩატვირთვისას
+
+// ჩატვირთვისას გახსენება
     window.addEventListener("DOMContentLoaded", () => {
         const savedTheme = localStorage.getItem("theme");
         if (savedTheme === "dark") {
             document.body.classList.add("dark");
             toggleBtn.innerHTML = `<i class="fas fa-sun"></i>`;
+
+            const logoEl = document.getElementById("appLogo");
+            if (logoEl) {
+                logoEl.data = "/icons/logo-dark.svg";
+            }
         }
+
     });
+
 
     document.addEventListener('mousedown', function (e) {
         const sidebar = document.getElementById('sidebar');
@@ -1166,82 +1169,71 @@ function showTagDropdown(filterValue) {
 }
 
 // ==== Tag Library CRUD ====
-function renderTagLibrary() {
-    tagListContainer.innerHTML = '';
-    [...allTags].forEach(tag => {
-        const li = document.createElement('li');
-        const input = document.createElement('input');
-        input.value = tag;
-
-        const saveBtn = document.createElement('button');
-        saveBtn.textContent = 'შენახვა';
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'წაშლა';
-        deleteBtn.style.background = '#dc3545';
-        deleteBtn.style.color = '#fff';
-
-        saveBtn.onclick = () => {
-            const newVal = input.value.trim();
-            if (!newVal || newVal === tag) return;
-
-            // 🔁 ჩაანაცვლე `allTags`
-            allTags.delete(tag);
-            allTags.add(newVal);
-
-            // 🔁 განაახლე ყველა ბარათი
-            document.querySelectorAll('.card').forEach(card => {
-                card.querySelectorAll('.tags span').forEach(span => {
-                    if (span.textContent === `#${tag}`) span.textContent = `#${newVal}`;
-                });
-            });
-
-            saveToStorage();
-            renderTagLibrary();
-        };
-
-        deleteBtn.onclick = () => {
-            // ✅ წავშალოთ მხოლოდ ბიბლიოთეკიდან
-            allTags.delete(tag);
-
-            // ✅ ბარათებიდან კი უბრალოდ მოვაშოროთ ვიზუალურად
-            document.querySelectorAll('.card').forEach(card => {
-                card.querySelectorAll('.tags span').forEach(span => {
-                    if (span.textContent === `#${tag}`) span.remove();
-                });
-            });
-
-            saveToStorage();
-            renderTagLibrary();
-        };
-
-        li.appendChild(input);
-        li.appendChild(saveBtn);
-        li.appendChild(deleteBtn);
-        tagListContainer.appendChild(li);
-    });
-}
 
 
-document.getElementById('addNewTagBtn').onclick = () => {
-    const val = document.getElementById('newTagInput').value.trim();
-    if (val && !allTags.has(val)) {
-        allTags.add(val);
-        document.getElementById('newTagInput').value = '';
-        renderTagLibrary();
-        saveToStorage();
-    }
-};
 
 // ==== Sidebar Tag Filter ====
 function renderSidebarTags() {
     sidebarTagList.innerHTML = '';
-    [...allTags].forEach(tag => {
-        const li = document.createElement('li');
-        li.textContent = tag;
-        if (activeFilterTags.has(tag)) li.classList.add('active');
 
-        li.onclick = () => {
+    const cards = [...document.querySelectorAll('.card')];
+    const tagCounts = {};
+
+    // 🔢 მოაგროვე თეგების რაოდენობები
+    cards.forEach(card => {
+        card.querySelectorAll('.card-tag').forEach(span => {
+            const tag = span.textContent.replace('#', '').trim();
+            if (!tag) return;
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+    });
+
+    // ➕ დამატება
+    const addContainer = document.createElement('li');
+    addContainer.className = 'tag-add-container';
+
+    const input = document.createElement('input');
+    input.placeholder = 'ახალი თეგი';
+    input.style.flex = '1';
+
+    const addBtn = document.createElement('button');
+    addBtn.innerHTML = '<i class="fas fa-plus"></i>';
+    addBtn.onclick = () => {
+        const val = input.value.trim();
+        if (val && !allTags.has(val)) {
+            allTags.add(val);
+            saveToStorage();
+            renderSidebarTags();
+            autoSyncOnChange?.(); // ✅ ახალი თეგი დავასინქრონოთ
+        }
+        input.value = '';
+    };
+
+    addContainer.appendChild(input);
+    addContainer.appendChild(addBtn);
+    sidebarTagList.appendChild(addContainer);
+
+    // თეგების სია
+    [...allTags].sort().forEach(tag => {
+        const li = document.createElement('li');
+        li.className = 'sidebar-tag-item';
+
+        const count = tagCounts[tag] || 0;
+        const isActive = activeFilterTags.has(tag);
+        if (isActive) li.classList.add('active');
+
+        const tagLabel = document.createElement('span');
+        tagLabel.textContent = tag;
+        tagLabel.style.flex = '1';
+        tagLabel.style.cursor = 'pointer';
+
+        const countBadge = document.createElement('span');
+        countBadge.textContent = count;
+        countBadge.className = 'tag-count-badge';
+
+        li.onclick = (e) => {
+            if (e.target.closest('button') || e.target.tagName === 'INPUT') return;
+
             if (activeFilterTags.has(tag)) {
                 activeFilterTags.delete(tag);
             } else {
@@ -1251,9 +1243,97 @@ function renderSidebarTags() {
             filterCardsByTags();
         };
 
+        const editBtn = document.createElement('button');
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            const editInput = document.createElement('input');
+            editInput.value = tag;
+            editInput.style.flex = '1';
+
+            const saveBtn = document.createElement('button');
+            saveBtn.innerHTML = '<i class="fas fa-save"></i>';
+
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+
+            saveBtn.onclick = () => {
+                const newVal = editInput.value.trim();
+                if (!newVal || newVal === tag || allTags.has(newVal)) {
+                    renderSidebarTags();
+                    return;
+                }
+
+                allTags.delete(tag);
+                allTags.add(newVal);
+
+                document.querySelectorAll('.card').forEach(card => {
+                    card.querySelectorAll('.card-tag').forEach(span => {
+                        if (span.textContent === `#${tag}`) {
+                            span.textContent = `#${newVal}`;
+                            span.style.backgroundColor = getColorForTag(newVal);
+                        }
+                    });
+                });
+
+                if (activeFilterTags.has(tag)) {
+                    activeFilterTags.delete(tag);
+                    activeFilterTags.add(newVal);
+                }
+
+                saveToStorage();
+                renderSidebarTags();
+                filterCardsByTags();
+                autoSyncOnChange?.();
+            };
+
+            cancelBtn.onclick = () => renderSidebarTags();
+
+            li.innerHTML = '';
+            li.appendChild(editInput);
+            li.appendChild(saveBtn);
+            li.appendChild(cancelBtn);
+        };
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (!confirm(`წავშალოთ თეგი "${tag}"?`)) return;
+
+            allTags.delete(tag);
+
+            document.querySelectorAll('.card').forEach(card => {
+                card.querySelectorAll('.card-tag').forEach(span => {
+                    if (span.textContent === `#${tag}`) span.remove();
+                });
+            });
+
+            activeFilterTags.delete(tag);
+            saveToStorage();
+            renderSidebarTags();
+            filterCardsByTags();
+            autoSyncOnChange?.();
+        };
+
+        const tagWrapper = document.createElement('div');
+        tagWrapper.style.display = 'flex';
+        tagWrapper.style.alignItems = 'center';
+        tagWrapper.style.gap = '6px';
+        tagWrapper.style.flex = '1';
+
+        tagWrapper.appendChild(tagLabel);
+        tagWrapper.appendChild(countBadge);
+
+        li.appendChild(tagWrapper);
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
         sidebarTagList.appendChild(li);
     });
 }
+
+
+
 
 function filterCardsByTags() {
     const tagsArray = [...activeFilterTags];
@@ -1526,9 +1606,6 @@ document.getElementById('closeAddModalBtn').onclick = () => {
     modalOverlay.style.display = 'none';
 };
 
-document.getElementById('closeTagLibraryXBtn').onclick = () => {
-    tagLibraryModal.style.display = 'none';
-};
 
 // თუ autoplay აქტიურია და ეს მოდალიდან მოდის — მოუმატე პროგრესი
 if (isPlaying && highlightEl) {
@@ -2042,7 +2119,6 @@ document.getElementById('importExcelInput').addEventListener('change', function 
 // 🔁 sidebar და სხვა UI
         renderSidebarTags();
         populateGlobalTags();
-        renderTagLibrary();
 
 // 💾 შენახვა
         saveToStorage();
@@ -2308,7 +2384,6 @@ function loadCardsFromStorage() {
     });
 
     // 4. დაბოლოს, გამოვიძახოთ	renderTagLibrary() – რომ თეგების ბიბლიოტეკაც წარმოიქმნას
-    renderTagLibrary();
 }
 
 
