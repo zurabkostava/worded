@@ -13,7 +13,7 @@ function initPuzzleGame() {
 }
 
 function startPuzzleGame() {
-    const { tag, count, reverse, hideMastered  } = getGlobalTrainingSettings();
+    const { tag, count, reverse, hideMastered } = getGlobalTrainingSettings();
     puzzleReverse = reverse;
     puzzleCount = count;
 
@@ -132,7 +132,7 @@ function showNextPuzzle() {
             checkSubmitEnabled();
         };
 
-        updateCardProgress(card, -0.4);
+        updateCardByText(word, -0.4);
         applyCurrentSort?.();
         checkSubmitEnabled();
     };
@@ -142,7 +142,6 @@ function showNextPuzzle() {
         const isCorrect = given.join(' ') === words.join(' ');
         const feedback = document.getElementById('puzzleFeedback');
 
-        // ✅ Stat update
         incrementStat('TOTAL_TESTS', 1);
         if (isCorrect) {
             incrementStat('TOTAL_CORRECT', 1);
@@ -152,7 +151,7 @@ function showNextPuzzle() {
 
         if (isCorrect) {
             feedback.innerHTML = `<span style="color: green;">სწორია!</span>`;
-            updateCardProgress(card, 3);
+            updateCardByText(word, 3);
             puzzleCorrect++;
             puzzleAnswer.querySelectorAll('button').forEach(b => {
                 b.style.backgroundColor = '#4caf50';
@@ -161,7 +160,7 @@ function showNextPuzzle() {
             });
         } else {
             feedback.innerHTML = `<span style="color: red;">არასწორია. სწორი წინადადება:<br><strong>${originalSentence}</strong></span>`;
-            updateCardProgress(card, -3);
+            updateCardByText(word, -3);
             puzzleAnswer.querySelectorAll('button').forEach(b => b.disabled = true);
         }
 
@@ -178,7 +177,7 @@ function showNextPuzzle() {
     hintBtn.onclick = () => {
         const alt = oppositeSentences[0] || "(ვერ მოიძებნა საპირისპირო წინადადება)";
         document.getElementById('puzzleHint').textContent = `📘 სხვა ენაზე: ${alt}`;
-        updateCardProgress(card, -0.4);
+        updateCardByText(word, -0.4);
         hintBtn.disabled = true;
         applyCurrentSort?.();
     };
@@ -186,6 +185,13 @@ function showNextPuzzle() {
     function checkSubmitEnabled() {
         puzzleSubmit.disabled = puzzleAnswer.querySelectorAll('button').length !== words.length;
     }
+}
+
+function updateCardByText(wordText, delta) {
+    const card = [...document.querySelectorAll('.card')].find(c =>
+        c.querySelector('.word')?.textContent.trim().toLowerCase() === wordText.toLowerCase()
+    );
+    if (card) updateCardProgress(card, delta);
 }
 
 function showPuzzleResults() {
