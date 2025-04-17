@@ -698,7 +698,7 @@ closeNotificationsBtn.onclick = () => {
     notificationsModal.style.display = 'none';
 };
 
-addReminderBtn.onclick = () => {
+addReminderBtn.onclick = async () => {
     const time = reminderTimeInput.value;
     const days = [...document.querySelectorAll('.weekday-checkboxes input:checked')].map(cb => parseInt(cb.value));
     const tag = document.getElementById("notificationTagFilter").value;
@@ -722,8 +722,42 @@ addReminderBtn.onclick = () => {
     localStorage.setItem("reminders", JSON.stringify(reminders));
     renderReminders();
     clearReminderForm();
+
+    // === ✅ Step 4: Save to Firestore ===
+    try {
+        const token = await getFCMToken(); // მოითხოვე შენახული Firebase Messaging Token
+        if (!token) {
+            console.warn("FCM Token არ მოიძებნა");
+            return;
+        }
+
+        const reminderData = {
+            token,
+            time,
+            days,
+            tag,
+            excludeMastered
+        };
+
+        await firebase.firestore().collection("reminders").add(reminderData);
+        console.log("Reminder saved to Firestore!");
+    } catch (error) {
+        console.error("შეცდომა Firebase-ში შენახვისას:", error);
+    }
 };
 
+async function getFCMToken() {
+    try {
+        const messaging = firebase.messaging();
+        const token = await messaging.getToken({
+            vapidKey: "BNq3-Trxsd5PnOmcQY1AmUeuU-cKdYy75uHWSycU-jH1dvuq854pWRWEG_Um7xIDnQ7VtaO0FXoP8Gb8CbEyves" // ❗ ჩაანაცვლე შენი VAPID public key-ით
+        });
+        return token;
+    } catch (err) {
+        console.error("შეცდომა FCM Token-ის მიღებისას", err);
+        return null;
+    }
+}
 
 
 function clearReminderForm() {
