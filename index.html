@@ -29,6 +29,29 @@
     <script defer="" src="puzzle.js">
     </script>
     <script src="tts.js"></script>
+    <!-- Firebase App (კორ ბიბლიოთეკა) -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+
+    <!-- Firebase Cloud Messaging -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-messaging-compat.js"></script>
+
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase Initialization -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyArftPeH-SoIwmm2aKLDHBTE8M4DQ5jLM8",
+            authDomain: "worded-1a455.firebaseapp.com",
+            projectId: "worded-1a455",
+            storageBucket: "worded-1a455.appspot.com",
+            messagingSenderId: "385741553786",
+            appId: "1:385741553786:web:c9e1d0d5bb662950f9fbc3"
+        };
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('firebase-messaging-sw.js')
@@ -40,6 +63,8 @@
     <!-- შენიშნე, რომ ორი ახალი ფუნქცია დაგვჭირდება:
             getDocs, doc, setDoc, deleteDoc -->
     <script type="module">
+
+
         import {
             initializeApp
         } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
@@ -345,7 +370,6 @@
     <!-- Tagify CSS -->
     <link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet"/>
     <!-- Font Awesome (latest version) -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify">
