@@ -711,40 +711,38 @@ addReminderBtn.onclick = async () => {
 
     const newReminder = { time, days, tag, excludeMastered };
 
-    if (editingReminderIndex !== -1) {
-        reminders[editingReminderIndex] = newReminder;
-        editingReminderIndex = -1;
-        addReminderBtn.textContent = '➕ დამატება';
-    } else {
-        reminders.push(newReminder);
+    // === 🔥 FCM Token ===
+    let fcmToken;
+    try {
+        fcmToken = await getFCMToken(); // შენ უნდა გქონდეს ეს ფუნქცია უკვე
+    } catch (err) {
+        console.error("შეცდომა FCM Token-ის მიღებისას", err);
     }
 
+    if (!fcmToken) {
+        console.error("⚠️ FCM Token არ მოიძებნა");
+        return;
+    }
+
+    // 📥 შეინახე Firestore-ში
+    const reminderToSave = { ...newReminder, fcmToken };
+    try {
+        await firebase.firestore().collection("reminders").add(reminderToSave);
+        console.log("✅ Reminder saved to Firestore!");
+        showToast("შეტყობინება დაემატა 🎉", "success");
+    } catch (err) {
+        console.error("🔥 Reminder Firestore-ში ვერ შეინახა:", err);
+        showToast("შეცდომა შენახვისას", "error");
+    }
+
+    // 💾 Optional — შენახე ლოკალურადაც
+    reminders.push(newReminder);
     localStorage.setItem("reminders", JSON.stringify(reminders));
+
     renderReminders();
     clearReminderForm();
-
-    // === ✅ Step 4: Save to Firestore ===
-    try {
-        const token = await getFCMToken(); // მოითხოვე შენახული Firebase Messaging Token
-        if (!token) {
-            console.warn("FCM Token არ მოიძებნა");
-            return;
-        }
-
-        const reminderData = {
-            token,
-            time,
-            days,
-            tag,
-            excludeMastered
-        };
-
-        await firebase.firestore().collection("reminders").add(reminderData);
-        console.log("Reminder saved to Firestore!");
-    } catch (error) {
-        console.error("შეცდომა Firebase-ში შენახვისას:", error);
-    }
 };
+
 
 async function getFCMToken() {
     try {
