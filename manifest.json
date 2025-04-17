@@ -1,7 +1,12 @@
 {
   "short_name": "EnglishCards",
   "name": "English Learning Cards",
+
   "icons": [
+    {
+      "gcm_sender_id": "385741553786"
+    },
+
     {
       "src": "/icons/icon-192.png",
       "type": "image/png",
@@ -12,9 +17,12 @@
       "sizes": "512x512"
     }
   ],
+  "gcm_sender_id": "385741553786",
+
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#ffffff",
   "background_color": "#ffffff"
 }
+
